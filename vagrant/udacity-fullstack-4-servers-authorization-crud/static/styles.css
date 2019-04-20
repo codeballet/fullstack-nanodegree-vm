@@ -1,0 +1,61 @@
+body {
+	font-family: sans-serif;
+	background-color: #EEEEFF;
+}
+
+h1 {
+	color: #8FBAD8;
+	border-bottom: 2px solid #8FBAD8;
+}
+
+h2, h3, h4 {
+	color: #555555;
+}
+
+p {
+	color: #222222;
+}
+
+a {
+	text-decoration: none;
+	color: #AA5555;
+}
+
+dt {
+	margin-top: 1em;
+}
+
+.pane {
+	border: 2px solid;
+	border-radius: 10px;
+	border-color: #8FBAD8;
+	margin: 20px;
+	padding: 10px;
+	position: absolute;
+	left: 25%;
+	width: 50%;
+}
+
+.flash {
+	background: #8FBAD8;
+}
+
+.name {
+	display: inline-block;
+}
+
+.price {
+	text-align: right;
+	float: right;
+}
+
+.description {
+	margin-top: .5em;
+	font-style: italic;
+}
+
+.editdelete {
+	margin: 1em 0em 2em 0em;
+	text-align: right;
+	border-bottom: 1px solid #8FBAD8
+}
