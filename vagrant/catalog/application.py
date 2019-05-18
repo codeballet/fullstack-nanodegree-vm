@@ -47,11 +47,21 @@ def showCategory(category_name):
 @app.route('/catalog/<category_name>/new', methods = ['GET', 'POST'])
 def addItem(category_name):
     if request.method == 'POST':
+        category = session.query(Category).filter_by(category_name = category_name).one()
         if request.form['item_name']:
             newItem = Item(item_name = request.form['item_name'],
                            item_desciption = request.form['item_description'],
-                           item_price = request.form['item_price'])
-        return 'here you add a new catalog item'
+                           item_price = request.form['item_price'],
+                           category_id = category.category_id)
+            session.add(newItem)
+            session.commit()
+            flash('New Item added!')
+            return redirect(url_for('showCategory', category_name = category.category_name))
+        else:
+            flash('You did not add a new Item')
+            return redirect(url_for('showCategory', category_name = category.category_name))
+    else:
+        return render_template('addItem', category = category)
 
 
 @app.route('/catalog/<category_name>/<item_name>')
