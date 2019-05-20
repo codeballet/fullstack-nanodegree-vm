@@ -2,51 +2,54 @@
 {% block content %}
 {% include "header.html" %}
 
-<div class="row divider green">
-    <div class="col-md-12"></div>
-</div>
-
-<div class="row banner menu">
-	<div class="col-md-11 col-md-offset-1 padding-none">
+<div class="row">
+	<div class="col-md-11 col-md-offset-1">
 		<h1>New Item</h1>
 	</div>
 </div>
 
 <div class="row">
-	<div class="col-md-6 col-md-offset-1 padding-top">
+	<div class="col-md-6 col-md-offset-1">
 		<form action="{{ url_for('addItem', category_name = category.category_name) }}" method = "post">
+
 			<div class="form-group">
 				<label for="item_name">Name:</label>
-				<input type ="text" maxlength="80" class="form-control" name="item_name" placeholder="Name of the item">
-
-				<label for="item_description">Description:</label>
-				<textarea class="form-control" maxlength="250" rows="5" name="item_description" placeholder="Description of the item">
-                </textarea>
-
-				<label for="item_price">Price:</label>
-				<div class="input-group">
-					<div class="input-group-addon">$</div>
-					<input type ="text" class="form-control" maxlength="15" name="item_price" placeholder="Price in $">
-				</div>
-
-                <label for="category_name">Course:</label>
-
-                <div class="dropdown">
-                    <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        Category
-                    </a>
-                    <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-                    {% for category in categories %}
-                        <a class="dropdown-item" href="#">{{ category.category_name }}</a>
-                    {% endfor %}
-                    </div>
-                </div>
-
-				<button type="submit" class="btn btn-default" id="submit" type="submit">
-					Create
-				</button>
-
+				<input type ="text" class="form-control" name="item_name" placeholder="Name of the item">
 			</div>
+
+			<div class="form-group">
+				<label for="item_description">Description:</label>
+				<textarea class="form-control" rows="5" name="item_description"></textarea>
+			</div>
+
+
+			<div class="form-group">
+				<label for="item_price">Price:</label>
+				<div class="input-group mb-3">
+					<div class="input-group-prepend">
+						<span class="input-group-text" id="basic-addon1">$</span>
+					</div>
+					<input type="text" class="form-control" name="item_price" placeholder="Price in $" aria-label="Username" aria-describedby="basic-addon1">
+				</div>
+			</div>
+
+			<div class="form-group">
+				<label for="category_id">Choose Category:</label>
+				<select class="custom-select" name='category_id'>
+					<option selected>{{ category.category_name }}</option>
+					{% for category in categories %}
+					<option value="{{ category.category_id }}">{{ category.category_name }}</option>
+					{% endfor %}
+				</select>
+			</div>
+			
+			<a href="{{ url_for('catalog') }}" class='btn btn-outline-secondary' role='button'>
+				Cancel
+			</a>
+
+			<button type="submit" class="btn btn-outline-success" id="submit">
+				Create
+			</button>
 		</form>
 	</div>
 </div>

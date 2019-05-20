@@ -2,30 +2,26 @@
 {% block content %}
 {% include "header.html" %}
 
-<div class="row divider blue">
-    <div class="col-md-12"></div>
-</div>
+<div class="row">
+    <div class="col-12">
+        <div class = 'flash'>
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}          
+                <ul>
+                    {% for message in messages %}
+                    <li> <strong> {{ message }} </strong> </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            {% endwith %}
+        </div>
+    </div>
 
-<div class="row banner main">
-    <div class="col-md-1"></div>
-    <div class="col-md-4 padding-none">
-
+    <div class="col-md-4 offset-md-1">
         <h1>Categories</h1>
 
-        <div class = 'flash'>
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}          
-            <ul>
-                {% for message in messages %}
-                <li> <strong> {{ message }} </strong> </li>
-                {% endfor %}
-            </ul>
-            {% endif %}
-        {% endwith %}
-        </div>
-
         <a href="{{ url_for('addCategory') }}">
-            <button class="btn btn-default" id="new-restaurant">
+            <button type="button" class="btn btn-primary" id="new-category">
                 Add Category
             </button>
         </a>

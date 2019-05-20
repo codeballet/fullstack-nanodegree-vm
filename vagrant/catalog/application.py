@@ -51,7 +51,7 @@ def addItem(category_name):
     if request.method == 'POST':
         if request.form['item_name']:
             newItem = Item(item_name = request.form['item_name'],
-                           item_desciption = request.form['item_description'],
+                           item_description = request.form['item_description'],
                            item_price = request.form['item_price'],
                            category_id = category.category_id)
             session.add(newItem)

@@ -2,30 +2,26 @@
 {% block content %}
 {% include "header.html" %}
 
-<div class="row divider blue">
-    <div class="col-md-12"></div>
-</div>
+<div class="row">
+    <div class="col-12">
+        <div class = 'flash'>
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}          
+                <ul>
+                    {% for message in messages %}
+                    <li> <strong> {{ message }} </strong> </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            {% endwith %}
+        </div>
+    </div>
 
-<div class="row banner main">
-    <div class="col-md-1"></div>
-    <div class="col-md-4 padding-none">
-
+    <div class="col-md-4 offset-md-1">
         <h1>Categories</h1>
 
-        <div class = 'flash'>
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}          
-            <ul>
-                {% for message in messages %}
-                <li> <strong> {{ message }} </strong> </li>
-                {% endfor %}
-            </ul>
-            {% endif %}
-        {% endwith %}
-        </div>
-
         <a href="{{ url_for('addCategory') }}">
-            <button class="btn btn-default" id="new-category">
+            <button class="btn btn-primary" id="new-category">
                 Add Category
             </button>
         </a>
@@ -35,23 +31,20 @@
             <h3>{{ category.category_name }}</h3>
         </a>
         {% endfor %}
-
     </div>
 
     <div class='col-md-7'>
-
         <h1>{{ category.category_name }} Items</h1>
 
         <a href="{{ url_for('addItem', category_name = category.category_name) }}">
-            <button class="btn btn-default" id="new-item">
+            <button class="btn btn-primary" id="new-item">
                 Add Item
             </button>
         </a>
 
         {% for item in items %}
-        <h2>{{ item.item_name }} - {{ item.item_price }}</h2>
+        <h4>{{ item.item_name }} - Price: {{ item.item_price }}</h4>
         {% endfor %}
-
     </div>
 </div>
 
