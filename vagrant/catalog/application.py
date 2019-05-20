@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify, flash
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, asc, desc
 from sqlalchemy.orm import sessionmaker
 from model import Category, User, Item, Base
 
@@ -16,8 +16,13 @@ session = Session()
 @app.route('/')
 @app.route('/catalog')
 def catalog():
-    categories = session.query(Category).all()
-    return render_template('catalog.html', categories = categories)
+    categories = session.query(Category).order_by(asc(Category.category_name))
+    items = session.query(Item).order_by(desc(Item.item_date)).limit(10)
+    list_categories = []
+    for item in items:
+        get_category = session.query(Category).filter_by(category_id = item.category_id).one()
+        list_categories.append(get_category.category_name)
+    return render_template('catalog.html', categories = categories, items = items, list_categories = list_categories)
 
 
 @app.route('/catalog/new', methods = ['GET', 'POST'])

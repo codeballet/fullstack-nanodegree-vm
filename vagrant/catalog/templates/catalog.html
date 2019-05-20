@@ -21,7 +21,7 @@
         <h1>Categories</h1>
 
         <a href="{{ url_for('addCategory') }}">
-            <button type="button" class="btn btn-primary" id="new-category">
+            <button type="button" class="btn btn-outline-primary" id="new-category">
                 Add Category
             </button>
         </a>
@@ -37,7 +37,14 @@
     <div class='col-md-7'>
 
         <h1>Latest added Items</h1>
-        <p>Add items here from the database...</p>
+
+        {% for item in items %}
+            <a href = "#">
+                <ul>
+                    <li>{{ item.item_name }} <i>({{ list_categories[loop.index0] }})</i></li>
+                </ul>
+            </a>
+        {% endfor %}
 
     </div>
 </div>
