@@ -21,7 +21,7 @@
         <h1>Categories</h1>
 
         <a href="{{ url_for('addCategory') }}">
-            <button class="btn btn-primary" id="new-category">
+            <button class="btn btn-outline-primary" id="new-category">
                 Add Category
             </button>
         </a>
@@ -37,7 +37,7 @@
         <h1>{{ category.category_name }} Items</h1>
 
         <a href="{{ url_for('addItem', category_name = category.category_name) }}">
-            <button class="btn btn-primary" id="new-item">
+            <button class="btn btn-outline-primary" id="new-item">
                 Add Item
             </button>
         </a>
