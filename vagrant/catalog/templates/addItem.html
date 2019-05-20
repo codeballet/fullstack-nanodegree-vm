@@ -3,13 +3,13 @@
 {% include "header.html" %}
 
 <div class="row">
-	<div class="col-md-11 col-md-offset-1">
+	<div class="col-md-11 offset-md-1">
 		<h1>New Item</h1>
 	</div>
 </div>
 
 <div class="row">
-	<div class="col-md-6 col-md-offset-1">
+	<div class="col-md-6 offset-md-1">
 		<form action="{{ url_for('addItem', category_name = category.category_name) }}" method = "post">
 
 			<div class="form-group">
