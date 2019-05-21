@@ -5,7 +5,15 @@
 <div class="row">
 
     <div class="col-md-11 offset-md-1">
-        <h1>{{ item.item_name }} (<i>{{ category.category_name }}</i>)</h1>
+        <h1>
+            {{ item.item_name }} (
+                <i>
+                    <a href = "{{ url_for('showCategory', category_name = category.category_name) }}">
+                        {{ category.category_name }}
+                    </a>
+                </i>
+            )
+        </h1>
         <p>Price: {{ item.item_price }}</p>
         <h2>Description:</h2>
         <p>{{ item.item_description }}</p>
