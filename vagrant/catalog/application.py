@@ -52,7 +52,7 @@ def showCategory(category_name):
 @app.route('/catalog/<category_name>/new', methods = ['GET', 'POST'])
 def addItem(category_name):
     category = session.query(Category).filter_by(category_name = category_name).one()
-    categories = session.query(Category).all()
+    categories = session.query(Category).order_by(Category.category_name)
     if request.method == 'POST':
         if request.form['item_name']:
             newItem = Item(item_name = request.form['item_name'],
