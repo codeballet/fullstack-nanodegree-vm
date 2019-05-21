@@ -72,7 +72,9 @@ def addItem(category_name):
 
 @app.route('/catalog/<category_name>/<item_name>')
 def showItem(category_name, item_name):
-    return 'here are details about an item'
+    item = session.query(Item).filter_by(item_name = item_name).one()
+    category = session.query(Category).filter_by(category_id = item.category_id)
+    return render_template('showItem.html', item = item, category = category)
 
 
 @app.route('/catalog/<category_name>/<item_name>/edit', methods = ['GET', 'POST'])

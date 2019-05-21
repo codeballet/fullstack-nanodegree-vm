@@ -1,0 +1,14 @@
+{% extends "main.html" %}
+{% block content %}
+{% include "header.html" %}
+
+<div class="row">
+
+    <div class="col-md-11 offset-md-1">
+        <h1>{{ item.item_name }} ({{ category.category_name }})</h1>
+    </div>
+
+</div>
+
+
+{% endblock %}
