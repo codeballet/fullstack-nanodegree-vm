@@ -42,9 +42,13 @@
             </button>
         </a>
 
+        <ul>
         {% for item in items %}
-        <h4>{{ item.item_name }} - Price: {{ item.item_price }}</h4>
+            <a href = "{{ url_for('showItem', category_name = category.category_name, item_name = item.item_name) }}">
+                <li>{{ item.item_name }} - Price: {{ item.item_price }}</li>
+            </a>
         {% endfor %}
+        </ul>
     </div>
 </div>
 
