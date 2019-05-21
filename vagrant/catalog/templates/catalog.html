@@ -38,13 +38,15 @@
 
         <h1>Latest added Items</h1>
 
+        <ul>
         {% for item in items %}
-            <a href = "#">
-                <ul>
-                    <li>{{ item.item_name }} <i>({{ list_categories[loop.index0] }})</i></li>
-                </ul>
+            <a href = "{{ url_for('showItem', category_name = list_categories[loop.index0], item_name = item.item_name) }}">
+                    <li>
+                            {{ item.item_name }} <i>({{ list_categories[loop.index0] }})</i>
+                    </li>
             </a>
         {% endfor %}
+        </ul>
 
     </div>
 </div>

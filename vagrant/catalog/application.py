@@ -73,7 +73,7 @@ def addItem(category_name):
 @app.route('/catalog/<category_name>/<item_name>')
 def showItem(category_name, item_name):
     item = session.query(Item).filter_by(item_name = item_name).one()
-    category = session.query(Category).filter_by(category_id = item.category_id)
+    category = session.query(Category).filter_by(category_id = item.category_id).one()
     return render_template('showItem.html', item = item, category = category)
 
 
