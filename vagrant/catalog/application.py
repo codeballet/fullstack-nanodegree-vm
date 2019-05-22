@@ -72,14 +72,35 @@ def addItem(category_name):
 
 @app.route('/catalog/<category_name>/<item_name>')
 def showItem(category_name, item_name):
+    print 'in the showItem view'
     item = session.query(Item).filter_by(item_name = item_name).one()
+    print 'item name: %s' % item.item_name
     category = session.query(Category).filter_by(category_id = item.category_id).one()
     return render_template('showItem.html', item = item, category = category)
 
 
 @app.route('/catalog/<category_name>/<item_name>/edit', methods = ['GET', 'POST'])
 def editItem(category_name, item_name):
-    return 'here you edit an item'
+    editedItem = session.query(Item).filter_by(item_name = item_name).one()
+    category = session.query(Category).filter_by(category_id = editedItem.category_id).one()
+    categories = session.query(Category).order_by(Category.category_name)
+    if request.method == 'POST':
+        if request.form['item_name']:
+            editedItem.item_name = request.form['item_name']
+            editedItem.item_description = request.form['item_description']
+            editedItem.item_price = request.form['item_price']
+            editedItem.category_id = request.form['category_id']
+            session.add(editedItem)
+            session.commit()
+            editedCategory = session.query(Category).filter_by(category_id = editedItem.category_id).one()
+            flash('Item "{{ editedItem.item_name }}" edited')
+            return render_template('showItem.html', category_name = editedCategory.category_name, item_name = editedItem.item_name)
+        else:
+            flash('Please edit all the fields!')
+            return redirect(url_for('editItem', category_name = category.category_name, item_name = item.item_name))
+
+    else:
+        return render_template('editedItem.html', item = editedItem, category = category, categories = categories)
 
 
 @app.route('/catalog/<category_name>/<item_name>/delete', methods = ['GET', 'POST'])

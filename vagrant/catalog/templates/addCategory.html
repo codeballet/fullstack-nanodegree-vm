@@ -7,6 +7,20 @@
 	</div>
 </div>
 <div class="row">
+	<div class="col-12">
+		<div class = 'flash'>
+			{% with messages = get_flashed_messages() %}
+				{% if messages %}          
+				<ul>
+					{% for message in messages %}
+					<li> <strong> {{ message }} </strong> </li>
+					{% endfor %}
+				</ul>
+				{% endif %}
+			{% endwith %}
+		</div>
+	</div>
+	
 	<div class="col-md-6 offset-md-1">
 		<form action="{{ url_for('addCategory') }}" method = "post">
 
