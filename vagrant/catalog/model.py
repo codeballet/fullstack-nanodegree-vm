@@ -25,6 +25,14 @@ class Category(Base):
     category_name = Column(String(80), nullable=False)
     # user = relationship('User', backref=backref('categories', cascade='all, delete-orphan'))
 
+    @property
+    def serialize(self):
+        """Return object data in easily serializeable format"""
+        return {
+            'category_id': self.category_id,
+            'category_name': self.category_name
+        }
+
 
 
 
@@ -48,11 +56,11 @@ class Item(Base):
     def serialize(self):
        """Return object data in easily serializeable format"""
        return {
-           'name': self.item_name,
-           'description': self.item_description,
-           'id': self.item_id,
-           'price': self.item_price,
-           'date': self.item_date,
+           'item_name': self.item_name,
+           'item_description': self.item_description,
+           'item_id': self.item_id,
+           'item_price': self.item_price,
+           'item_date': self.item_date,
            'user_id': self.user_id,
            'category_id': self.category_id
        }
