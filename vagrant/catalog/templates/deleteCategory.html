@@ -4,13 +4,13 @@
 
 <div class="row">
 	<div class="col-md-11 offset-md-1">
-        <h1>Delete item "{{ item.item_name }}" from category "{{ category.category_name }}"?</h1>
+        <h1>Delete category "{{ category.category_name }}" and all its items?</h1>
 	</div>
 </div>
 
 <div class='row'>
     <div class='col-md-11 offset-md-1'>
-        <form action="{{ url_for('deleteItem', category_name = category.category_name, item_name = item.item_name) }}" method='post'>
+        <form action="{{ url_for('deleteCategory', category_name = category.category_name) }}" method='post'>
             <a href="{{ url_for('showCategory', category_name = category.category_name) }}" class='btn btn-outline-secondary' role='button'>
                 Cancel
             </a>

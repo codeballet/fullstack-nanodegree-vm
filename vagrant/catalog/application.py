@@ -51,7 +51,14 @@ def showCategory(category_name):
 
 @app.route('/catalog/<category_name>/delete', methods = ['GET', 'POST'])
 def deleteCategory(category_name):
-    return 'delete category, cascading to all items in category'
+    category = session.query(Category).filter_by(category_name = category_name).one()
+    if request.method == 'POST':
+        session.delete(category)
+        session.commit()
+        flash('Category and all its items deleted!')
+        return redirect(url_for('catalog'))
+    else:
+        return render_template('deleteCategory.html', category = category)
 
 
 @app.route('/catalog/newitem', methods = ['GET', 'POST'])
@@ -109,9 +116,7 @@ def editItem(category_name, item_name):
 def deleteItem(category_name, item_name):
     category = session.query(Category).filter_by(category_name = category_name).one()
     item = session.query(Item).filter_by(item_name = item_name).one()
-    print 'item name: %s' % item.item_name
     if request.method == 'POST':
-        print 'inside deleteItem POST view'
         session.delete(item)
         session.commit()
         flash('Item deleted')
