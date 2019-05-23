@@ -72,8 +72,9 @@ def addItem():
                            category_id = request.form['category_id'])
             session.add(newItem)
             session.commit()
+            category = session.query(Category).filter_by(category_id = newItem.category_id).one()
             flash('New Item added!')
-            return redirect(url_for('catalog'))
+            return redirect(url_for('showItem', category_name = category.category_name, item_name = newItem.item_name))
         else:
             flash('You did not add a new Item')
             return redirect(url_for('catalog'))
