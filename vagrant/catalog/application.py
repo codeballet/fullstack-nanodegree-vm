@@ -139,24 +139,93 @@ def deleteItem(category_name, item_name):
 #################
 
 @app.route('/api/catalog/items.json')
-def catalog_items_handler():
-    return 'a json response with all Items'
+def items_handler():
+    return getAllItems()
 
+
+@app.route('/api/catalog/item/<int:item_id>', methods = ['GET', 'POST', 'PUT', 'DELETE'])
+def item_handler(item_id):
+    try:
+        if request.method == 'GET':
+            print 'Getting an Item'
+            return getItem(item_id)
+
+        elif request.method == 'POST':
+            print 'Creating an Item'
+            return addItem(item_id)
+
+        elif request.method == 'PUT':
+            print 'Editing an Item'
+            item_id = request.args.get('id')
+            item_name = request.args.get('name')
+            item_description = request.args.get('description')
+            item_price = request.args.get('price')
+            return editItem(item_id, item_name, item_description, item_price)
+        
+        elif request.method == 'DELETE':
+            print 'Deleting an Item'
+            return deleteItem(item_id)
+    except:
+            return jsonify({'error':'Invalid request'})
 
 
 @app.route('/api/catalog/categories.json')
 def categories_handler():
-    return 'a json response with all Categories'
+    return getAllCategories()
 
 
+@app.route('/api/catalog/users.json')
+def users_handler():
+    return getAllUsers()
+
+
+
+#############################
+# Methods for API endpoints #
+#############################
 
 def getAllItems():
-    print 'function to get all Items'
+    try:
+        items = session.query(Item).all()
+        if items:
+            return jsonify(items = [i.serialize for i in items])
+        else:
+            return jsonify({'error':'Cannot find any Items'})
+    except:
+        return jsonify({'error':'Cannot retrive Items'})
+
+
+def getItem(item_id):
+    try:
+        item = session.query(Item).filter_by(item_id = item_id).one()
+        if item:
+            return jsonify(item = item.serialize)
+        else:
+            return jsonify({'error':'Cannot find the Item'})
+    except:
+        return jsonify({'error':'Cannot retrive the Item'})
 
 
 def getAllCategories():
-    print 'function to get all Categories'
+    try:
+        categories = session.query(Category).all()
+        if categories:
+            return jsonify(categories = [i.serialize for i in categories])
+        else:
+            return jsonify({'error':'Cannot find any Categories'})
+    except:
+        return jsonify({'error':'Cannot retrive Categories'})
 
+
+def getAllUsers():
+    try:
+        users = session.query(User).all()
+        if users:
+            return jsonify(users = [i.serialize for i in users])
+        else:
+            return jsonify({'error':'Cannot find any Users'})
+    except:
+        return jsonify({'error':'Cannot retrive Users'})
 
 
 
