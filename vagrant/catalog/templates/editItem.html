@@ -3,22 +3,8 @@
 {% include "header.html" %}
 
 <div class="row">
-    <div class="col-12">
-        <div class = 'flash'>
-            {% with messages = get_flashed_messages() %}
-                {% if messages %}          
-                <ul>
-                    {% for message in messages %}
-                    <li> <strong> {{ message }} </strong> </li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
-            {% endwith %}
-        </div>
-    </div>
-
 	<div class="col-md-11 offset-md-1">
-		<h1>Edit {{ item.item_name }} ({{ category.category_name }})</h1>
+		<h1>Edit {{ item.item_name }} (<i>{{ category.category_name }}</i>)</h1>
 	</div>
 </div>
 
@@ -47,7 +33,7 @@
 			<div class="form-group">
 				<label for="category_id">Choose Category:</label>
 				<select class="custom-select" name='category_id'>
-					<option selected>{{ category.category_name }}</option>
+					<option selected value="{{ category.category_id }}">{{ category.category_name }}</option>
 					{% for category in categories %}
 					<option value="{{ category.category_id }}">{{ category.category_name }}</option>
 					{% endfor %}
