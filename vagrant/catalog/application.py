@@ -13,6 +13,11 @@ session = Session()
 
 
 
+
+##############
+# HTML views #
+##############
+
 @app.route('/')
 @app.route('/catalog')
 def catalog():
@@ -124,6 +129,35 @@ def deleteItem(category_name, item_name):
         return redirect(url_for('showCategory', category_name = category.category_name))
     else:
         return render_template('deleteItem.html', category = category, item = item)
+
+
+
+
+
+#################
+# API endpoints #
+#################
+
+@app.route('/api/catalog/items.json')
+def catalog_items_handler():
+    return 'a json response with all Items'
+
+
+
+@app.route('/api/catalog/categories.json')
+def categories_handler():
+    return 'a json response with all Categories'
+
+
+
+def getAllItems():
+    print 'function to get all Items'
+
+
+def getAllCategories():
+    print 'function to get all Categories'
+
+
 
 
 
