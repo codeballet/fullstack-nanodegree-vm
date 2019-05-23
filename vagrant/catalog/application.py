@@ -109,11 +109,13 @@ def editItem(category_name, item_name):
 def deleteItem(category_name, item_name):
     category = session.query(Category).filter_by(category_name = category_name).one()
     item = session.query(Item).filter_by(item_name = item_name).one()
-    if request.form == 'POST':
+    print 'item name: %s' % item.item_name
+    if request.method == 'POST':
+        print 'inside deleteItem POST view'
         session.delete(item)
         session.commit()
         flash('Item deleted')
-        return redirect(url_for('showCategory', category = category))
+        return redirect(url_for('showCategory', category_name = category.category_name))
     else:
         return render_template('deleteItem.html', category = category, item = item)
 
