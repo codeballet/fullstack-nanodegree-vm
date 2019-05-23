@@ -97,17 +97,17 @@ def editItem(category_name, item_name):
     if request.method == 'POST':
         if request.form['item_name']:
             item.item_name = request.form['item_name']
+        if request.form['item_description']:
             item.item_description = request.form['item_description']
+        if request.form['item_price']:
             item.item_price = request.form['item_price']
+        if request.form['category_id']:
             item.category_id = request.form['category_id']
-            session.add(item)
-            session.commit()
-            editedCategory = session.query(Category).filter_by(category_id = item.category_id).one()
-            flash("Item edited")
-            return redirect(url_for('showItem', category_name = editedCategory.category_name, item_name = item.item_name))
-        else:
-            flash('Please at least fill in the name of the item!')
-            return redirect(url_for('editItem', category_name = category.category_name, item_name = item.item_name))
+        session.add(item)
+        session.commit()
+        editedCategory = session.query(Category).filter_by(category_id = item.category_id).one()
+        flash("Item edited")
+        return redirect(url_for('showItem', category_name = editedCategory.category_name, item_name = item.item_name))
 
     else:
         return render_template('editItem.html', item = item, category = category, categories = categories)
