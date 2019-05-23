@@ -138,21 +138,32 @@ def deleteItem(category_name, item_name):
 # API endpoints #
 #################
 
-@app.route('/api/catalog/items.json')
+@app.route('/api/catalog/items')
 def items_handler():
     return getAllItems()
 
 
-@app.route('/api/catalog/item/<int:item_id>', methods = ['GET', 'POST', 'PUT', 'DELETE'])
+@app.route('/api/catalog/category/<category_id>/item/new', methods = ['GET', 'POST'])
+def add_item_handler(category_id):
+    try:
+        category = session.query(Category).filter_by(category_id = category_id).first()
+        if category != None and request.method == 'POST':
+            item_name = request.args.get('name')
+            item_description = request.args.get('description')
+            item_price = request.args.get('price')
+            return addItem(category.category_id, item_name, item_description, item_price)
+        else:
+            return jsonify({'error':'Cannot find category, check your category ID'})
+    except:
+        return jsonify({'error':'Invalid request, check your category ID'})
+
+
+@app.route('/api/catalog/item/<int:item_id>', methods = ['GET', 'PUT', 'DELETE'])
 def item_handler(item_id):
     try:
         if request.method == 'GET':
             print 'Getting an Item'
             return getItem(item_id)
-
-        elif request.method == 'POST':
-            print 'Creating an Item'
-            return addItem(item_id)
 
         elif request.method == 'PUT':
             print 'Editing an Item'
@@ -169,20 +180,20 @@ def item_handler(item_id):
             return jsonify({'error':'Invalid request'})
 
 
-@app.route('/api/catalog/categories.json')
+@app.route('/api/catalog/categories')
 def categories_handler():
     return getAllCategories()
 
 
-@app.route('/api/catalog/users.json')
+@app.route('/api/catalog/users')
 def users_handler():
     return getAllUsers()
 
 
 
-#############################
-# Methods for API endpoints #
-#############################
+##################################
+# Methods for database retreival #
+##################################
 
 def getAllItems():
     try:
@@ -204,6 +215,24 @@ def getItem(item_id):
             return jsonify({'error':'Cannot find the Item'})
     except:
         return jsonify({'error':'Cannot retrive the Item'})
+
+
+def addItem(category_id, item_name, item_description, item_price):
+    try:
+        if item_name:
+            newItem = Item(
+                category_id = category_id,
+                item_name = item_name,
+                item_description = item_description,
+                item_price = item_price
+            )
+            session.add(newItem)
+            session.commit()
+            return jsonify(item = newItem.serialize)
+        else:
+            return jsonify({'error':'Missing Item name argument'})
+    except:
+        return jsonify({'error':'Cannot create Item'})
 
 
 def getAllCategories():
