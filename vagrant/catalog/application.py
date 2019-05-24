@@ -148,9 +148,9 @@ def add_item_handler(category_id):
     try:
         category = session.query(Category).filter_by(category_id = category_id).first()
         if category != None and request.method == 'POST':
-            item_name = request.args.get('name')
-            item_description = request.args.get('description')
-            item_price = request.args.get('price')
+            item_name = request.json.get('name')
+            item_description = request.json.get('description')
+            item_price = request.json.get('price')
             return addItem(category.category_id, item_name, item_description, item_price)
         else:
             return jsonify({'error':'Cannot find category, check your category ID'})
