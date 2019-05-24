@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, abort
+from flask import Flask, render_template, request, redirect, url_for, jsonify, json, flash, abort
 from sqlalchemy import create_engine, asc, desc
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import NoResultFound
@@ -195,10 +195,8 @@ def categories_handler():
 @app.route('/api/catalog/category/new', methods = ['POST'])
 def new_category_handler():
     try:
-        print 'inside the new_category_handler'
         print 'about to define category_name'
-        category_name = request.args.get('name')
-        print 'defined variable category_name'
+        category_name = request.json.get('name')
         print 'category_name: %s' % category_name
         if category_name != None and request.method == 'POST':
             print 'about to run addCategory() method'
