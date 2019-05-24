@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, abort
 from sqlalchemy import create_engine, asc, desc
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.exc import NoResultFound
 from model import Category, User, Item, Base
 
 
@@ -196,9 +197,11 @@ def new_category_handler():
     try:
         print 'inside the new_category_handler'
         print 'about to define category_name'
-        category_name = request.json.get('name')
+        category_name = request.args.get('name')
         print 'defined variable category_name'
-        if category_name is not None and request.method == 'POST':
+        print 'category_name: %s' % category_name
+        if category_name != None and request.method == 'POST':
+            print 'about to run addCategory() method'
             return addCategory(category_name)
         else:
             return jsonify({'error':'Missing argument category_name'})
@@ -320,18 +323,18 @@ def getAllCategories():
         return jsonify({'error':'Cannot retrive Categories'})
 
 def addCategory(category_name):
+    print 'inside addCategory()'
     try:
         category = session.query(Category).filter_by(category_name = category_name).one()
-        if category is None:
-            newCategory = Category(category_name = category_name)
-            session.add(newCategory)
-            session.commit()
-            return jsonify(category = newCategory.serialize)
-        else:
-            return jsonify({'error':'Category %s already exists' % category_name})
-
-    except:
-        return jsonify({'error':'Cannot add Category'})
+        print 'found category: %s' % category
+        return jsonify({'error':'Category %s already exists' % category_name})
+            
+    except NoResultFound:
+        print 'inside NoResultFound exception'
+        newCategory = Category(category_name = category_name)
+        session.add(newCategory)
+        session.commit()
+        return jsonify(category = newCategory.serialize)
 
 
 def getAllUsers():
