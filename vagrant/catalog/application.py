@@ -143,7 +143,7 @@ def items_handler():
     return getAllItems()
 
 
-@app.route('/api/catalog/category/<category_id>/item/new', methods = ['GET', 'POST'])
+@app.route('/api/catalog/category/<category_id>/item/new', methods = ['POST'])
 def add_item_handler(category_id):
     try:
         category = session.query(Category).filter_by(category_id = category_id).first()
@@ -155,29 +155,36 @@ def add_item_handler(category_id):
         else:
             return jsonify({'error':'Cannot find category, check your category ID'})
     except:
-        return jsonify({'error':'Invalid request, check your category ID'})
+        return jsonify({'error':'Invalid request, check if category ID exists'})
 
 
 @app.route('/api/catalog/item/<int:item_id>', methods = ['GET', 'PUT', 'DELETE'])
 def item_handler(item_id):
     try:
-        if request.method == 'GET':
+        print 'inside item_handler'
+        item = session.query(Item).filter_by(item_id = item_id).first()
+        print item
+        print 'item name: %s' % item.item_name
+        if item!=None and request.method == 'GET':
             print 'Getting an Item'
             return getItem(item_id)
 
-        elif request.method == 'PUT':
+        elif item != None and request.method == 'PUT':
             print 'Editing an Item'
-            item_id = request.args.get('id')
-            item_name = request.args.get('name')
-            item_description = request.args.get('description')
-            item_price = request.args.get('price')
-            return editItem(item_id, item_name, item_description, item_price)
+            item_name = request.json.get('name')
+            item_description = request.json.get('description')
+            item_price = request.json.get('price')
+            print 'about to call editItem method'
+            return editItem(item, item_name, item_description, item_price)
         
-        elif request.method == 'DELETE':
+        elif item != None and request.method == 'DELETE':
             print 'Deleting an Item'
             return deleteItem(item_id)
+
+        else:
+            return jsonify({'error':'Cannot find item ID %s, please check if that ID exists' % item_id})
     except:
-            return jsonify({'error':'Invalid request'})
+            return jsonify({'error':'Invalid request for Item'})
 
 
 @app.route('/api/catalog/categories')
@@ -212,7 +219,7 @@ def getItem(item_id):
         if item:
             return jsonify(item = item.serialize)
         else:
-            return jsonify({'error':'Cannot find the Item'})
+            return jsonify({'error':'Cannot find the Item, check your item ID'})
     except:
         return jsonify({'error':'Cannot retrive the Item'})
 
@@ -233,6 +240,29 @@ def addItem(category_id, item_name, item_description, item_price):
             return jsonify({'error':'Missing Item name argument'})
     except:
         return jsonify({'error':'Cannot create Item'})
+
+
+def editItem(item, item_name, item_description, item_price):
+    try:
+        print 'inside editItem method'
+        category = session.query(Category).filter_by(category_id = item.category_id).first()
+        print 'category: %s' % category
+        if category != None:
+            item.category_id = category.category_id
+            if item_name:
+                item.item_name = item_name
+            if item_description:
+                item.item_description = item_description
+            if item_price:
+                item.item_price = item_price
+            session.add(item)
+            session.commit()
+            return jsonify(item = item.serialize)
+        else:
+            return jsonify({'error':'Cannot find category ID %s, check if that ID exists' % category_id})
+
+    except:
+        return jsonify({'error':'Cannot edit Item'})
 
 
 def getAllCategories():
