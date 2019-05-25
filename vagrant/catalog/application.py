@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, json, flash, abort
+from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, abort, json
 from sqlalchemy import create_engine, asc, desc
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import NoResultFound
@@ -139,6 +139,37 @@ def deleteItem(category_name, item_name):
 # API endpoints #
 #################
 
+@app.route('/api/catalog/categories')
+def categories_handler():
+    return getAllCategories()
+
+@app.route('/api/catalog/category/new', methods = ['POST'])
+def new_category_handler():
+    try:
+        category_name = request.json.get('name')
+        if category_name != None and request.method == 'POST':
+            return addCategory(category_name)
+        else:
+            return jsonify({'error':'Missing name argument'})
+
+    except:
+        return jsonify({'error':'Cannot create new Category'})
+
+
+@app.route('/api/catalog/category', methods = ['GET', 'PUT', 'DELETE'])
+def category_handler():
+    category_id = request.json.get('category_id')
+    category = session.query(Category).filter_by(category_id = category_id).one()
+    if category_id is None or category is None:
+        return jsonify({'error':'Missing or not valid category_id argument'})
+
+    elif request.method == 'GET':
+        return jsonify(category = category.serialize)
+
+    elif request.method == 'POST':
+        return addCategory()
+
+
 @app.route('/api/catalog/items')
 def items_handler():
     return getAllItems()
@@ -188,40 +219,6 @@ def item_handler(item_id):
             return jsonify({'error':'Invalid request for Item'})
 
 
-@app.route('/api/catalog/categories')
-def categories_handler():
-    return getAllCategories()
-
-@app.route('/api/catalog/category/new', methods = ['POST'])
-def new_category_handler():
-    try:
-        print 'about to define category_name'
-        category_name = request.json.get('name')
-        print 'category_name: %s' % category_name
-        if category_name != None and request.method == 'POST':
-            print 'about to run addCategory() method'
-            return addCategory(category_name)
-        else:
-            return jsonify({'error':'Missing argument category_name'})
-
-    except:
-        return jsonify({'error':'Cannot create new Category'})
-
-
-@app.route('/api/catalog/category', methods = ['GET', 'PUT', 'DELETE'])
-def category_handler():
-    category_id = request.json.get('category_id')
-    category = session.query(Category).filter_by(category_id = category_id).one()
-    if category_id is None or category is None:
-        return jsonify({'error':'Missing or not valid category_id argument'})
-
-    elif request.method == 'GET':
-        return jsonify(category = category.serialize)
-
-    elif request.method == 'POST':
-        return addCategory()
-
-
 @app.route('/api/catalog/users')
 def users_handler():
     return getAllUsers()
@@ -231,6 +228,29 @@ def users_handler():
 #############################
 # Methods for API endpoints #
 #############################
+
+def getAllCategories():
+    try:
+        categories = session.query(Category).all()
+        if categories:
+            return jsonify(categories = [i.serialize for i in categories])
+        else:
+            return jsonify({'error':'Cannot find any Categories'})
+    except:
+        return jsonify({'error':'Cannot retrive Categories'})
+
+
+def addCategory(category_name):
+    try:
+        category = session.query(Category).filter_by(category_name = category_name).one()
+        return jsonify({'error':'Category %s already exists' % category_name})
+            
+    except NoResultFound:
+        newCategory = Category(category_name = category_name)
+        session.add(newCategory)
+        session.commit()
+        return jsonify(category = newCategory.serialize)
+
 
 def getAllItems():
     try:
@@ -307,32 +327,6 @@ def deleteItem(item_id):
 
     except:
         return jsonify({'error':'Cannot delete Item'})
-
-
-
-def getAllCategories():
-    try:
-        categories = session.query(Category).all()
-        if categories:
-            return jsonify(categories = [i.serialize for i in categories])
-        else:
-            return jsonify({'error':'Cannot find any Categories'})
-    except:
-        return jsonify({'error':'Cannot retrive Categories'})
-
-def addCategory(category_name):
-    print 'inside addCategory()'
-    try:
-        category = session.query(Category).filter_by(category_name = category_name).one()
-        print 'found category: %s' % category
-        return jsonify({'error':'Category %s already exists' % category_name})
-            
-    except NoResultFound:
-        print 'inside NoResultFound exception'
-        newCategory = Category(category_name = category_name)
-        session.add(newCategory)
-        session.commit()
-        return jsonify(category = newCategory.serialize)
 
 
 def getAllUsers():
