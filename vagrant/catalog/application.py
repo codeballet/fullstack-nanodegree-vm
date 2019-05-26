@@ -143,39 +143,28 @@ def deleteItem(category_name, item_name):
 def categories_handler():
     return getAllCategories()
 
-@app.route('/api/catalog/category/new', methods = ['POST'])
-def new_category_handler():
-    try:
-        category_name = request.json.get('name')
-        if category_name != None and request.method == 'POST':
-            return addCategory(category_name)
-        else:
-            return jsonify({"error":"Missing name argument"})
 
-    except:
-        return jsonify({"error":"Cannot create new Category"})
-
-
-@app.route('/api/catalog/category', methods = ['GET', 'PUT', 'DELETE'])
+@app.route('/api/catalog/category', methods = ['GET', 'POST', 'PUT', 'DELETE'])
 def category_handler():
     try:
         category_id = request.json.get('id')
+        category_name = request.json.get('name')
         category = session.query(Category).filter_by(category_id = category_id).one()
-        if category_id is None or category is None:
-            return jsonify({"error":"No valid category_id argument"})
 
-        elif request.method == 'GET':
+        if category and request.method == 'GET':
             return jsonify(category = category.serialize)
 
-        elif request.method == 'PUT':
-            category_name = request.json.get('name')
-            return editCategory(category, category_id, category_name)
+        elif category_name and request.method == 'POST':
+            return addCategory(category_name)
+        
+        elif category_name and request.method == 'PUT':
+            return editCategory(category, category_name)
 
         elif request.method == 'DELETE':
             return deleteCategory(category, category_id)
 
         else:
-            return jsonify({"error":"No valid request for category"})
+            return jsonify({"error":"No valid key/value data for category request"})
 
     except:
         return jsonify({"error":"Cannot access Category ID %s" % category_id})
@@ -247,7 +236,7 @@ def getAllCategories():
 def addCategory(category_name):
     try:
         category = session.query(Category).filter_by(category_name = category_name).one()
-        return jsonify({"error":"Category %s already exists" % category_name})
+        return jsonify({"message":"Category %s already exists" % category_name})
             
     except NoResultFound:
         newCategory = Category(category_name = category_name)
@@ -256,15 +245,14 @@ def addCategory(category_name):
         return jsonify(category = newCategory.serialize)
 
 
-def editCategory(category, category_id, category_name):
-    if category_name != None:
+def editCategory(category, category_name):
+    try:
         category.category_name = category_name
         session.add(category)
         session.commit()
         return jsonify(category = category.serialize)
-
-    else:
-        return jsonify({"error":"No valid name value provided"})
+    except:
+        return jsonify({"error":"Cannot change to name %s for category ID %s ", % (category_name, category.category_id)})
 
 
 def deleteCategory(category, category_id):
