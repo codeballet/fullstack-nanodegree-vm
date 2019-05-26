@@ -141,7 +141,7 @@ def deleteItem(category_name, item_name):
 
 @app.route('/api/catalog/categories')
 def categories_handler():
-    return getAllCategories()
+    return getAllCategoriesAPI()
 
 
 @app.route('/api/catalog/category', methods = ['GET', 'POST', 'PUT', 'DELETE'])
@@ -151,16 +151,16 @@ def category_handler():
         category_name = request.json.get('name')
 
         if category_id and request.method == 'GET':
-            return getCategory(category_id)
+            return getCategoryAPI(category_id)
 
         elif category_name and request.method == 'POST':
-            return addCategory(category_name)
+            return addCategoryAPI(category_name)
         
         elif category_id and category_name and request.method == 'PUT':
-            return editCategory(category_id, category_name)
+            return editCategoryAPI(category_id, category_name)
 
         elif request.method == 'DELETE':
-            return deleteCategory(category_id)
+            return deleteCategoryAPI(category_id)
 
         else:
             return jsonify({"error":"No valid key/value data for category request"})
@@ -173,7 +173,7 @@ def category_handler():
 def items_handler():
     try:
         items = session.query(Item).all()
-        return getAllItems(items)
+        return getAllItemsAPI(items)
 
     except:
         return jsonify({"error":"Cannot retrive Items"})
@@ -190,19 +190,19 @@ def add_item_handler():
 
         # Retreiving an item with key: id
         if item_id and request.method == 'GET':
-            return getItem(item_id)
+            return getItemAPI(item_id)
 
         # Creating new item with keys: category_id, name
         elif category_id and item_name and request.method == 'POST':
-            return addItem(category_id, item_name, item_price, item_description)
+            return addItemAPI(category_id, item_name, item_price, item_description)
 
         # Editing item with key: id
         elif item_id and request.method == 'PUT':
-            return editItem(category_id, item_id, item_name, item_price, item_description)
+            return editItemAPI(category_id, item_id, item_name, item_price, item_description)
 
         # Delete item with key: id
         elif item_id and request.method == 'DELETE':
-            return deleteItem(item_id)
+            return deleteItemAPI(item_id)
 
         else:
             return jsonify({"error":"Cannot find relevant Key/Value pairs"})
@@ -213,7 +213,7 @@ def add_item_handler():
 
 @app.route('/api/catalog/users')
 def users_handler():
-    return getAllUsers()
+    return getAllUsersAPI()
 
 
 
@@ -221,7 +221,7 @@ def users_handler():
 # Methods for API endpoints #
 #############################
 
-def getAllCategories():
+def getAllCategoriesAPI():
     try:
         categories = session.query(Category).all()
         if categories:
@@ -232,7 +232,7 @@ def getAllCategories():
         return jsonify({"error":"Cannot retrive Categories"})
 
 
-def getCategory(category_id):
+def getCategoryAPI(category_id):
     try:
         category = session.query(Category).filter_by(category_id = category_id).one()
         return jsonify(category = category.serialize)
@@ -241,7 +241,7 @@ def getCategory(category_id):
         return jsonify({"error":"Cannot get category ID %s" % category_id})
 
 
-def addCategory(category_name):
+def addCategoryAPI(category_name):
     try:
         category = session.query(Category).filter_by(category_name = category_name).one()
         return jsonify({"message":"Category %s already exists" % category_name})
@@ -253,7 +253,7 @@ def addCategory(category_name):
         return jsonify(category = newCategory.serialize)
 
 
-def editCategory(category_id, category_name):
+def editCategoryAPI(category_id, category_name):
     try:
         category = session.query(Category).filter_by(category_id = category_id).one()
         category.category_name = category_name
@@ -264,7 +264,7 @@ def editCategory(category_id, category_name):
         return jsonify({"error":"Cannot edit category ID %s" % category_id})
 
 
-def deleteCategory(category_id):
+def deleteCategoryAPI(category_id):
     try:
         category = session.query(Category).filter_by(category_id = category_id).one()
         session.delete(category)
@@ -275,14 +275,14 @@ def deleteCategory(category_id):
         return jsonify({"error":"cannot delete category ID %s" % category_id})
 
 
-def getAllItems(items):
+def getAllItemsAPI(items):
     if items:
         return jsonify(items = [i.serialize for i in items])
     else:
         return jsonify({"error":"Cannot find any Items"})
 
 
-def getItem(item_id):
+def getItemAPI(item_id):
     try:
         item = session.query(Item).filter_by(item_id = item_id).one()
         if item:
@@ -293,7 +293,7 @@ def getItem(item_id):
         return jsonify({"error":"Cannot retrive Item ID %s" % item_id})
 
 
-def addItem(category_id, item_name, item_price, item_description):
+def addItemAPI(category_id, item_name, item_price, item_description):
     try:
         category = session.query(Category).filter_by(category_id = category_id).one()
         newItem = Item(category_id = category_id, item_name = item_name, item_price = item_price, item_description = item_description)
@@ -304,7 +304,7 @@ def addItem(category_id, item_name, item_price, item_description):
         return jsonify({"error":"Category ID not valid: %s" % category_id})
 
 
-def editItem(category_id, item_id, item_name, item_price, item_description):
+def editItemAPI(category_id, item_id, item_name, item_price, item_description):
     try:
         item = session.query(Item).filter_by(item_id = item_id).one()
         if item and category_id:
@@ -324,7 +324,7 @@ def editItem(category_id, item_id, item_name, item_price, item_description):
         return jsonify({"error":"Not valid category or item ID"})
 
 
-def deleteItem(item_id):
+def deleteItemAPI(item_id):
     try:
         item = session.query(Item).filter_by(item_id = item_id).one()
         session.delete(item)
@@ -335,7 +335,7 @@ def deleteItem(item_id):
         return jsonify({"error":"Cannot find item ID %s" % item_id})
 
 
-def getAllUsers():
+def getAllUsersAPI():
     try:
         users = session.query(User).all()
         if users:
