@@ -149,19 +149,18 @@ def category_handler():
     try:
         category_id = request.json.get('id')
         category_name = request.json.get('name')
-        category = session.query(Category).filter_by(category_id = category_id).one()
 
-        if category and request.method == 'GET':
-            return jsonify(category = category.serialize)
+        if category_id and request.method == 'GET':
+            return getCategory(category_id)
 
         elif category_name and request.method == 'POST':
             return addCategory(category_name)
         
-        elif category_name and request.method == 'PUT':
-            return editCategory(category, category_name)
+        elif category_id and category_name and request.method == 'PUT':
+            return editCategory(category_id, category_name)
 
         elif request.method == 'DELETE':
-            return deleteCategory(category, category_id)
+            return deleteCategory(category_id)
 
         else:
             return jsonify({"error":"No valid key/value data for category request"})
@@ -233,6 +232,15 @@ def getAllCategories():
         return jsonify({"error":"Cannot retrive Categories"})
 
 
+def getCategory(category_id):
+    try:
+        category = session.query(Category).filter_by(category_id = category_id).one()
+        return jsonify(category = category.serialize)
+
+    except:
+        return jsonify({"error":"Cannot get category ID %s" % category_id})
+
+
 def addCategory(category_name):
     try:
         category = session.query(Category).filter_by(category_name = category_name).one()
@@ -245,18 +253,20 @@ def addCategory(category_name):
         return jsonify(category = newCategory.serialize)
 
 
-def editCategory(category, category_name):
+def editCategory(category_id, category_name):
     try:
+        category = session.query(Category).filter_by(category_id = category_id).one()
         category.category_name = category_name
         session.add(category)
         session.commit()
         return jsonify(category = category.serialize)
     except:
-        return jsonify({"error":"Cannot change to name %s for category ID %s ", % (category_name, category.category_id)})
+        return jsonify({"error":"Cannot edit category ID %s" % category_id})
 
 
-def deleteCategory(category, category_id):
+def deleteCategory(category_id):
     try:
+        category = session.query(Category).filter_by(category_id = category_id).one()
         session.delete(category)
         session.commit()
         return jsonify({"message":"Category ID %s deleted" % category_id})
