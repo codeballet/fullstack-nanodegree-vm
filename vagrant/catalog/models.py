@@ -2,8 +2,17 @@ from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy import create_engine
- 
+
+from passlib.apps import custom_app_context as pwd_context
+import random, string
+from itsdangerous import(TimedJSONWebSignatureSerializer as Serializer, BadSignature, SignatureExpired)
+
+
 Base = declarative_base()
+
+
+# Generate a secret key to create and verify tokens
+secret_key = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in xrange(32))
 
 
 class User(Base):
@@ -13,6 +22,43 @@ class User(Base):
     user_name = Column(String(250), nullable=False)
     user_email = Column(String(250), nullable=False)
     user_picture = Column(String(250))
+    password_hash = Column(String)
+
+    @property
+    def serialize(self):
+        """Return object data in easily serializeable format"""
+        return {
+            'user_id': self.user_id,
+            'user_name': self.user_name,
+            'user_email': self.user_email
+        }
+
+    # Methods to generate and verify password_hash
+    def hash_password(self, password):
+        self.password_hash = pwd_context.hash(password)
+
+    def verify_password(self, password):
+        return pwd_context.verify(password, self.password_hash)
+
+    # Method to generate auth tokens
+    def generate_auth_token(self, expiration = 600):
+        s = Serializer(secret_key, expires_in = expiration)
+        return s.dumps({"user_id": self.user_id})
+
+    # Method to verify auth tokens
+    @staticmethod
+    def verify_auth_token(token):
+        s = Serializer(secret_key)
+        try:
+            data = s.loads(token)
+        except SignatureExpired:
+            # Valid token, but expired
+            return None
+        except BadSignature:
+            # Invalid token
+            return None
+        user_id = data['user_id']
+        return user_id
         
 
 

@@ -1,9 +1,18 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, abort
+from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, abort, g
 from sqlalchemy import create_engine, asc, desc
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import NoResultFound
-from model import Category, User, Item, Base
+from models import Category, User, Item, Base
 
+from oauth2client.client import flow_from_clientsecrets
+from oauth2client.client import FlowExchangeError
+import httplib2
+from flask import make_response
+from flask_httpauth import HTTPBasicAuth
+import requests, json
+
+
+auth = HTTPBasicAuth()
 
 app = Flask(__name__)
 engine = create_engine('sqlite:///antiques.db')
@@ -12,12 +21,95 @@ Session = sessionmaker(bind = engine)
 session = Session()
 
 
+with open('client_secrets.json', 'r') as f:
+    CLIENT_ID = json.loads(f.read())['web']['client_id']
+
+
+####################################
+# Authorisation and Authentication #
+####################################
+
+# Verify token or username / password for protected routes
+@auth.verify_password
+def verify_password(username_or_token, password):
+    # Check for token
+    try:
+        user_id = User.verify_auth_token(username_or_token)
+        if user_id:
+            user = session.query(User).filter_by(user_id = user_id).one()
+        else:
+            user = session.query(User).filter_by(user_name = username_or_token).first()
+            if not user or not user.verify_password(password):
+                return False
+        g.user = user
+        return True
+    except:
+        return False
+
+
+# Collect oauth user info and generate app token
+@app.route('/oauth/<provider>', methods = ['POST'])
+def login(provider):
+    auth_code = request.json.get('auth_code')
+    # Exchange one-time client code for oauth access token
+    if provider == 'google':
+        try:
+            print 'starting oauth flow'
+            oauth_flow = flow_from_clientsecrets('client_secrets.json', scope = '')
+            oauth_flow.redirect_uri = 'postmessage'
+            credentials = oauth_flow.step2_exchange(auth_code)
+            print 'finished oauth flow'
+        except FlowExchangeError:
+            print 'inside FlowExchangeError'
+            response = make_response(json.dumps('Failed to upgrade authorization code'), 401)
+            response.headers['Content-type'] = 'application/json'
+            return response
+
+        # Check that oauth access_token is valid
+        access_token = credentials.access_token
+        print 'access token received: %s' % access_token
+        url = ('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s' % access_token)
+        h = httplib2.Http()
+        result = json.loads(h.request(url, 'GET')[1])
+        if result.get('error') is not None:
+            response = make_response(json.dumps(result.get('error')), 500)
+            response.headers['Content-Type'] = 'application/json'
+
+        # Get user info from oauth provider
+        userinfo_url = "https://www.googleapis.com/oauth2/v1/userinfo"
+        params = {'access_token': credentials.access_token, 'alt':'json'}
+        answer = requests.get(userinfo_url, params=params)
+        data = answer.json()
+        user_name = data['name']
+        user_picture = data['picture']
+        user_email = data['email']
+
+        # If user does not exist, create a new one
+        user = session.query(User).filter_by(user_email = user_email).first()
+        if not user:
+            user = User(user_name = user_name, user_picture = user_picture, user_email = user_email)
+            session.add(user)
+            session.commit()
+
+        # Generate token and send back to client
+        token = user.generate_auth_token(600)
+        return jsonify({"token": token.decode('ascii')})
+
+    else:
+        return 'Unrecognized Provider'
 
 
 
 ##################
 # HTML endpoints #
 ##################
+
+# Login page
+@app.route('/login')
+@app.route('/catalog/login')
+def start():
+    return render_template('login.html')
+
 
 @app.route('/')
 @app.route('/catalog')
@@ -139,12 +231,42 @@ def deleteItem(category_name, item_name):
 # API endpoints #
 #################
 
+# Create new user
+@app.route('/api/users', methods = ['POST'])
+def new_user():
+    user_name = request.json.get('name')
+    user_email = request.json.get('email')
+    password = request.json.get('password')
+    if user_name is None or password is None:
+        return jsonify({"error":"Missing name and password arguments"})
+        
+    if session.query(User).filter_by(user_name = user_name).first() is not None:
+        return jsonify({"message":"user already exists"})
+
+    user = User(user_name = user_name, user_email = user_email)
+    user.hash_password(password)
+    session.add(user)
+    session.commit()
+    return jsonify({ "username": user.user_name })
+
+
+# Generate token for already logged in user
+@app.route('/api/token')
+@auth.login_required
+def get_auth_token():
+    token = g.user.generate_auth_token()
+    return jsonify({"token":token.decode('ascii')})
+
+
+# Get all categories
 @app.route('/api/catalog/categories')
 def categories_handler():
     return getAllCategoriesAPI()
 
 
+# Operate on a specific category
 @app.route('/api/catalog/category', methods = ['GET', 'POST', 'PUT', 'DELETE'])
+@auth.login_required
 def category_handler():
     try:
         category_id = request.json.get('id')
@@ -169,6 +291,7 @@ def category_handler():
         return jsonify({"error":"Cannot access Category ID %s" % category_id})
 
 
+# Get all items
 @app.route('/api/catalog/items')
 def items_handler():
     try:
@@ -179,7 +302,9 @@ def items_handler():
         return jsonify({"error":"Cannot retrive Items"})
 
 
+# Operate on a specific item
 @app.route('/api/catalog/item', methods = ['GET', 'POST', 'PUT', 'DELETE'])
+@auth.login_required
 def add_item_handler():
     try:
         category_id = request.json.get('category_id')
@@ -211,7 +336,9 @@ def add_item_handler():
         return jsonify({"error":"Invalid request, cannot operate on item"})
 
 
+# Get all users info
 @app.route('/api/catalog/users')
+@auth.login_required
 def users_handler():
     return getAllUsersAPI()
 
