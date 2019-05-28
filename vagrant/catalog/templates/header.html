@@ -2,10 +2,10 @@
 	<a class="navbar-brand" href="{{ url_for('catalog') }}">Catalog</a>
 
 	<span class="navbar-text">
-		{% if 'username' not in session %}		
+		{% if 'user_name' not in session %}		
 		<a href="{{ url_for('showLogin') }}">Login</a>
 		{% else %}
-		<a href="#">Log out</a>
+		<a href="{{ url_for('oauthDisconnect') }}">Log out</a>
 		{% endif %}
 	</span>
 </nav>

@@ -84,6 +84,7 @@ def login(provider):
         url = ('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s' % access_token)
         h = httplib2.Http()
         result = json.loads(h.request(url, 'GET')[1])
+        print 'result: %s' % result
         if result.get('error') is not None:
             response = make_response(json.dumps(result.get('error')), 500)
             response.headers['Content-Type'] = 'application/json'
@@ -113,8 +114,8 @@ def login(provider):
             return response
 
         # store the access token in the session for later use
-            login_session['access_token'] = credentials.access_token
-            login_session['g_id'] = g_id
+        login_session['access_token'] = credentials.access_token
+        login_session['g_id'] = g_id
 
         # Get user info from oauth provider
         userinfo_url = "https://www.googleapis.com/oauth2/v1/userinfo"
@@ -127,10 +128,6 @@ def login(provider):
         login_session['user_email'] = data['email']
         login_session['provider'] = 'google'
             
-        user_name = data['name']
-        user_picture = data['picture']
-        user_email = data['email']
-
         # If user does not exist, create a new one
         user_id = getUserID(login_session['user_email'])
         if not user_id:
@@ -144,6 +141,50 @@ def login(provider):
 
     else:
         return 'Unrecognized OAuth provider'
+
+# Disconnect, revoke access_token, reset login_session
+@app.route('/oauth/disconnect')
+def oauthDisconnect():
+    if 'provider' in login_session:
+        if login_session['provider'] == 'google':
+            gdisconnect()
+            del login_session['g_id']
+            del login_session['access_token']
+        del login_session['user_name']
+        del login_session['user_email']
+        del login_session['user_picture']
+        del login_session['user_id']
+        del login_session['provider']
+        flash('You have successfully logged out')
+        return redirect(url_for('catalog'))
+
+@app.route('/oauth/gdisconnect')
+def gdisconnect():
+    # check if there is a user to disconnect
+    access_token = login_session.get('access_token')
+    if access_token is None:
+        print 'Access token is None'
+        response = make_response(json.dumps('Current user not connected'), 401)
+        response.headers['Content-type'] = 'application/json'
+        return response
+    print 'In gdisconnect access token is %s' % access_token
+    print 'User name is: '
+    print login_session['user_name']
+    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % login_session['access_token']
+    h = httplib2.Http()
+    result = h.request(url, 'GET')[0]
+
+    print 'result is: '
+    print result
+    if result['status'] == '200':
+        response = make_response(json.dumps('Successfully disconnected'), 200)
+        response.headers['Content-type'] = 'application/json'
+        return response
+    else:
+        response = make_response(json.dumps('Failed to revoke token'), 400)
+        response.headers['Content-type'] = 'application/json'
+        return response
+
 
 # User Helper Functions
 def createUser(login_session):
