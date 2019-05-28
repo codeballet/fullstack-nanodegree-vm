@@ -8,8 +8,9 @@ from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
 import httplib2
 from flask import make_response
+from flask import session as login_session
 from flask_httpauth import HTTPBasicAuth
-import requests, json
+import requests, json, random, string
 
 
 auth = HTTPBasicAuth()
@@ -50,9 +51,21 @@ def verify_password(username_or_token, password):
 # Collect oauth user info and generate app token
 @app.route('/oauth/<provider>', methods = ['POST'])
 def login(provider):
-    auth_code = request.json.get('auth_code')
     # Exchange one-time client code for oauth access token
     if provider == 'google':
+        # check for 'X-Requested-With' header to prevent CSRF attacks
+        if not request.headers.get('X-Requested-With'):
+            response = make_response(json.dumps('abort'), 403)
+            response.headers['Content-type'] = 'application/json'
+            return response
+        # Validate state token
+        if request.args.get('state') != login_session['state']:
+            response = make_response(json.dumps('Invalid state parameter.'), 401)
+            response.headers['Content-type'] = 'application/json'
+            return response
+        # obtain authorization code
+        auth_code = request.data
+        # upgrade the authorization code into a credentials object
         try:
             print 'starting oauth flow'
             oauth_flow = flow_from_clientsecrets('client_secrets.json', scope = '')
@@ -75,30 +88,83 @@ def login(provider):
             response = make_response(json.dumps(result.get('error')), 500)
             response.headers['Content-Type'] = 'application/json'
 
+        # verify the access token is used for the intended user
+        g_id = credentials.id_token['sub']
+        if result['user_id'] != g_id:
+            response = make_response(
+                json.dumps("Token's user ID does not match given user ID."), 401)
+            response.headers['Content-type'] = 'application/json'
+            return response
+
+        # verify the access token is valid for this app
+        if result['issued_to'] != CLIENT_ID:
+            response = make_response(
+                json.dumps("Token's client ID does not match app's."), 401)
+            response.headers['Content-type'] = 'application/json'
+            return response
+
+        # check to see if user is already logged in
+        stored_access_token = login_session.get('access_token')
+        stored_g_id = login_session.get('g_id')
+        if stored_access_token is not None and g_id == stored_g_id:
+            response = make_response(
+                json.dumps("Current user is already connected."), 200)
+            response.headers['Content-type'] = 'application/json'
+            return response
+
+        # store the access token in the session for later use
+            login_session['access_token'] = credentials.access_token
+            login_session['g_id'] = g_id
+
         # Get user info from oauth provider
         userinfo_url = "https://www.googleapis.com/oauth2/v1/userinfo"
         params = {'access_token': credentials.access_token, 'alt':'json'}
         answer = requests.get(userinfo_url, params=params)
         data = answer.json()
+
+        login_session['user_name'] = data['name']
+        login_session['user_picture'] = data['picture']
+        login_session['user_email'] = data['email']
+        login_session['provider'] = 'google'
+            
         user_name = data['name']
         user_picture = data['picture']
         user_email = data['email']
 
         # If user does not exist, create a new one
-        user = session.query(User).filter_by(user_email = user_email).first()
-        if not user:
-            user = User(user_name = user_name, user_picture = user_picture, user_email = user_email)
-            session.add(user)
-            session.commit()
+        user_id = getUserID(login_session['user_email'])
+        if not user_id:
+            user_id = createUser(login_session)
+        login_session['user_id'] = user_id
 
         # Generate token and send back to client
+        user = getUserInfo(user_id)
         token = user.generate_auth_token(600)
         return jsonify({"token": token.decode('ascii')})
 
     else:
-        return 'Unrecognized Provider'
+        return 'Unrecognized OAuth provider'
 
+# User Helper Functions
+def createUser(login_session):
+    newUser = User(user_name = login_session['user_name'],
+                   user_email = login_session['user_email'],
+                   user_picture = login_session['user_picture'])
+    session.add(newUser)
+    session.commit()
+    user = session.query(User).filter_by(user_email = login_session['user_email']).one()
+    return user.user_id
 
+def getUserInfo(user_id):
+    user = session.query(User).filter_by(user_id = user_id).one()
+    return user
+
+def getUserID(email):
+    try:
+        user = session.query(User).filter_by(user_email = email).one()
+        return user.user_id
+    except:
+        return None
 
 ##################
 # HTML endpoints #
@@ -107,8 +173,12 @@ def login(provider):
 # Login page
 @app.route('/login')
 @app.route('/catalog/login')
-def start():
-    return render_template('login.html')
+def showLogin():
+    state = ''.join(random.choice(string.ascii_uppercase + string.digits)
+        for x in range(32))
+    login_session['state'] = state
+    print 'state is: %s' % state
+    return render_template('showLogin.html', STATE = state)
 
 
 @app.route('/')

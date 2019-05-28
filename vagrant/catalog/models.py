@@ -20,7 +20,7 @@ class User(Base):
 
     user_id = Column(Integer, primary_key=True)
     user_name = Column(String(250), nullable=False)
-    user_email = Column(String(250), nullable=False)
+    user_email = Column(String(250), nullable=False, unique=True)
     user_picture = Column(String(250))
     password_hash = Column(String)
 
