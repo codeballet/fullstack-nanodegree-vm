@@ -38,7 +38,7 @@
         <h2>{{ category.category_name }} Items (by <i>{{ user_name }}</i>)</h2>
 
         {% if loggedIn and creator %}
-            <a href="{{ url_for('addItem') }}" class="btn btn-outline-primary" role="button">
+            <a href="{{ url_for('addItem', category_name = category.category_name, category_id = category.category_id) }}" class="btn btn-outline-primary" role="button">
                 Add Item
             </a>
         {% endif %}

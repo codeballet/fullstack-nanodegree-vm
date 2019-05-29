@@ -67,24 +67,24 @@ def login(provider):
         auth_code = request.data
         # upgrade the authorization code into a credentials object
         try:
-            print 'starting oauth flow'
+            print('starting oauth flow')
             oauth_flow = flow_from_clientsecrets('client_secrets.json', scope = '')
             oauth_flow.redirect_uri = 'postmessage'
             credentials = oauth_flow.step2_exchange(auth_code)
-            print 'finished oauth flow'
+            print('finished oauth flow')
         except FlowExchangeError:
-            print 'inside FlowExchangeError'
+            print('inside FlowExchangeError')
             response = make_response(json.dumps('Failed to upgrade authorization code'), 401)
             response.headers['Content-type'] = 'application/json'
             return response
 
         # Check that oauth access_token is valid
         access_token = credentials.access_token
-        print 'access token received: %s' % access_token
+        print('access token received: %s' % access_token)
         url = ('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s' % access_token)
         h = httplib2.Http()
         result = json.loads(h.request(url, 'GET')[1])
-        print 'result: %s' % result
+        print('result: %s' % result)
         if result.get('error') is not None:
             response = make_response(json.dumps(result.get('error')), 500)
             response.headers['Content-Type'] = 'application/json'
@@ -149,7 +149,7 @@ def login(provider):
         output += token
         output += '</p>'
         flash("you are now logged in as %s" % login_session['user_name'])
-        print "Done logging in!"
+        print("Done logging in!")
         return output
 
     else:
@@ -176,19 +176,19 @@ def gdisconnect():
     # check if there is a user to disconnect
     access_token = login_session.get('access_token')
     if access_token is None:
-        print 'Access token is None'
+        print('Access token is None')
         response = make_response(json.dumps('Current user not connected'), 401)
         response.headers['Content-type'] = 'application/json'
         return response
-    print 'In gdisconnect access token is %s' % access_token
-    print 'User name is: '
-    print login_session['user_name']
+    print('In gdisconnect access token is %s' % access_token)
+    print('User name is: ')
+    print(login_session['user_name'])
     url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % login_session['access_token']
     h = httplib2.Http()
     result = h.request(url, 'GET')[0]
 
-    print 'result is: '
-    print result
+    print('result is: ')
+    print(result)
     if result['status'] == '200':
         response = make_response(json.dumps('Successfully disconnected'), 200)
         response.headers['Content-type'] = 'application/json'
@@ -231,7 +231,7 @@ def showLogin():
     state = ''.join(random.choice(string.ascii_uppercase + string.digits)
         for x in range(32))
     login_session['state'] = state
-    print 'state is: %s' % state
+    print('state is: %s' % state)
     return render_template('showLogin.html', STATE = state)
 
 
@@ -240,29 +240,13 @@ def showLogin():
 def catalog():
     categories = session.query(Category).order_by(Category.category_name).all()
     items = session.query(Item).order_by(desc(Item.item_date)).limit(10)
-    list_categories = []
-    list_users = []
-
-    # Generate a list of category names for items in chronological order
-    for item in items:
-        get_category = session.query(Category).filter_by(category_id = item.category_id).one()
-        list_categories.append(get_category.category_name)
-
-    # Generate a list of users names for each category in alphabetical order
-    for category in categories:
-        get_user = session.query(User).filter_by(user_id = category.user_id).one()
-        list_users.append(get_user.user_name)
 
     # Check for logged in user and creator of categories
     loggedIn = False
-    creator = False
     if 'user_name' in login_session:
         loggedIn = True
-    for category in categories:
-        if login_session.get('user_id') == category.user_id:
-            creator = True
 
-    return render_template('catalog.html', loggedIn = loggedIn, creator = creator, categories = categories, items = items, list_categories = list_categories, list_users = list_users)
+    return render_template('catalog.html', loggedIn = loggedIn, categories = categories, items = items)
 
 
 @app.route('/catalog/category/new', methods = ['GET', 'POST'])
@@ -284,7 +268,7 @@ def addCategory():
         return render_template('addCategory.html')
 
 
-@app.route('/catalog/<category_name>/<int:category_id>/edit')
+@app.route('/catalog/<category_name>/<int:category_id>/edit', methods = ['GET', 'POST'])
 def editCategory(category_name, category_id):
     if 'user_name' not in login_session:
         flash('You need to log in to edit a category')
@@ -295,12 +279,16 @@ def editCategory(category_name, category_id):
     if login_session.get('user_id') == category.user_id:
         creator = True
 
-    if creator and request.form['category_name'] and request.method == 'POST':
+    if not creator:
+        flash('You can only edit your own categories')
+        return redirect('showCategory', category_name = category.category_name, category_id = category.category_id)
+
+    elif creator and request.form.get('category_name') and request.method == 'POST':
         category.category_name = request.form['category_name']
         session.add(category)
         session.commit()
         flash('Category edited')
-        return redirect(url_for('showCategory', category_name = category.category_name))
+        return redirect(url_for('showCategory', category_name = category.category_name, category_id = category.category_id))
     else:
         return render_template('editCategory.html', category = category)
 
@@ -316,6 +304,11 @@ def deleteCategory(category_name, category_id):
     if login_session.get('user_id') == category.user_id:
         creator = True
 
+    if not creator:
+        flash('You can only delete your own categories')
+        return redirect('showCategory', category_name = category.category_name, category_id = category.category_id)
+
+
     if creator and request.method == 'POST':
         session.delete(category)
         session.commit()
@@ -329,7 +322,7 @@ def deleteCategory(category_name, category_id):
 def showCategory(category_name, category_id):
     category = session.query(Category).filter_by(category_id = category_id).one()
     categories = session.query(Category).order_by(Category.category_name).all()
-    items = session.query(Item).filter_by(category_id = category_id).all()
+    items = session.query(Item).filter_by(category_id = category.category_id).all()
     user = session.query(User).filter_by(user_id = category.user_id).one()
 
     # Check for logged in user and creator of categories
@@ -349,13 +342,17 @@ def addItem(category_name, category_id):
         flash('You need to log in to add a new item')
         return redirect(url_for('catalog'))
     categories = session.query(Category).order_by(asc(Category.category_name))
-    category = session.query(Category).filter_by(category_id = category_id)
+    category = session.query(Category).filter_by(category_id = category_id).one()
     # Check for creator of category
     creator = False
     if login_session.get('user_id') == category.user_id:
         creator = True
+    
+    if not creator:
+        flash('You can only add items in your own categories')
+        return redirect('showCategory', category_name = category.category_name, category_id = category.category_id)
 
-    if creator and request.method == 'POST':
+    elif creator and request.method == 'POST':
         if request.form['item_name']:
             newItem = Item(item_name = request.form['item_name'],
                            item_description = request.form['item_description'],
@@ -369,14 +366,13 @@ def addItem(category_name, category_id):
             flash('You did not add a new Item')
             return redirect(url_for('catalog'))
     else:
-        return render_template('addItem.html', categories = categories)
+        return render_template('addItem.html', category = category, categories = categories)
 
 
 @app.route('/catalog/<category_name>/<item_name>/<int:item_id>')
 def showItem(category_name, item_name, item_id):
     item = session.query(Item).filter_by(item_id = item_id).one()
     category = session.query(Category).filter_by(category_id = item.category_id).one()
-    user = session.query(User).filter_by(user_id = item.user_id).one()
     # Check for logged in user and creator of categories
     loggedIn = False
     creator = False
@@ -385,7 +381,7 @@ def showItem(category_name, item_name, item_id):
     if login_session.get('user_id') == category.user_id:
         creator = True
 
-    return render_template('showItem.html', loggedIn = loggedIn, creator = creator, item = item, category = category, user = user)
+    return render_template('showItem.html', loggedIn = loggedIn, creator = creator, item = item, category = category)
 
 
 @app.route('/catalog/<category_name>/<item_name>/<int:item_id>/edit', methods = ['GET', 'POST'])
@@ -401,7 +397,12 @@ def editItem(category_name, item_name, item_id):
     if login_session.get('user_id') == category.user_id:
         creator = True
 
-    if creator and request.method == 'POST':
+    if not creator:
+        flash('You can only edit items in your own categories')
+        return redirect('showCategory', category_name = category.category_name, category_id = category.category_id)
+
+
+    elif creator and request.method == 'POST':
         if request.form['item_name']:
             item.item_name = request.form['item_name']
         if request.form['item_description']:
@@ -414,7 +415,7 @@ def editItem(category_name, item_name, item_id):
         session.commit()
         editedCategory = session.query(Category).filter_by(category_id = item.category_id).one()
         flash("Item edited")
-        return redirect(url_for('showItem', category_name = editedCategory.category_name, item_name = item.item_name))
+        return redirect(url_for('showItem', category_name = editedCategory.category_name, item_name = item.item_name, item_id = item.item_id))
 
     else:
         return render_template('editItem.html', item = item, category = category, categories = categories)
@@ -432,11 +433,15 @@ def deleteItem(category_name, item_name, item_id):
     if login_session.get('user_id') == category.user_id:
         creator = True
 
-    if creator and request.method == 'POST':
+    if not creator:
+        flash('You can only delete items in your own categories')
+        return redirect('showCategory', category_name = category.category_name, category_id = category.category_id)
+
+    elif creator and request.method == 'POST':
         session.delete(item)
         session.commit()
         flash('Item deleted')
-        return redirect(url_for('showCategory', category_name = category.category_name))
+        return redirect(url_for('showCategory', category_name = category.category_name, category_id = category.category_id))
     else:
         return render_template('deleteItem.html', category = category, item = item)
 
