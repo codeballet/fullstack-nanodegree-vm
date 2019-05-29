@@ -21,7 +21,7 @@
         <h1>
             {{ item.item_name }} (
                 <i>
-                    <a href = "{{ url_for('showCategory', category_name = category.category_name) }}">
+                    <a href = "{{ url_for('showCategory', category_name = category.category_name, category_id = category.category_id) }}">
                         {{ category.category_name }}
                     </a>
                 </i>
@@ -31,13 +31,15 @@
         <h3>Description:</h3>
         <p>{{ item.item_description }}</p>
 
-        <a href="{{ url_for('editItem', category_name = category.category_name , item_name = item.item_name) }}" class='btn btn-outline-secondary' role='button'>
+        {% if loggedIn and creator %}
+        <a href="{{ url_for('editItem', category_name = category.category_name , item_name = item.item_name, item_id = item.item_id) }}" class='btn btn-outline-secondary' role='button'>
             Edit
         </a>
 
-        <a href="{{ url_for('deleteItem', category_name = category.category_name, item_name = item.item_name) }}" class='btn btn-outline-danger' role='button'>
+        <a href="{{ url_for('deleteItem', category_name = category.category_name, item_name = item.item_name, item_id = item.item_id) }}" class='btn btn-outline-danger' role='button'>
             Delete
         </a>
+        {% endif %}
     </div>
 
 </div>

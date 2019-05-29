@@ -27,7 +27,7 @@
         {% endif %}
 
         {% for category in categories %}
-        <a href = "{{ url_for('showCategory', category_name = category.category_name) }}">
+        <a href = "{{ url_for('showCategory', category_name = category.category_name, category_id = category.category_id) }}">
             <h3>{{ category.category_name }}</h3>
             <p>(by <i>{{ user_name }}</i>)</p>
         </a>
@@ -44,19 +44,19 @@
         {% endif %}
 
         {% if loggedIn and creator %}
-            <a href="{{ url_for('editCategory', category_name = category.category_name) }}" class="btn btn-outline-secondary" role="button">
+            <a href="{{ url_for('editCategory', category_name = category.category_name, category_id = category.category_id) }}" class="btn btn-outline-secondary" role="button">
                 Edit Category
             </a>
         {% endif %}
 
         {% if loggedIn and creator %}
-            <a href="{{ url_for('deleteCategory', category_name = category.category_name) }}" class="btn btn-outline-danger" role="button">
+            <a href="{{ url_for('deleteCategory', category_name = category.category_name, category_id = category.category_id) }}" class="btn btn-outline-danger" role="button">
                 Delete Category
             </a>
         {% endif %}
         <ul>
         {% for item in items %}
-            <a href = "{{ url_for('showItem', category_name = category.category_name, item_name = item.item_name) }}">
+            <a href = "{{ url_for('showItem', category_name = category.category_name, item_name = item.item_name, item_id = item.item_id) }}">
                 <li>{{ item.item_name }} - Price: {{ item.item_price }}</li>
             </a>
         {% endfor %}

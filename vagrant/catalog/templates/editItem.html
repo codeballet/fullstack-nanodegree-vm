@@ -10,7 +10,7 @@
 
 <div class="row">
 	<div class="col-md-6 offset-md-1">
-		<form action="{{ url_for('editItem', category_name = category.category_name, item_name = item.item_name) }}" method = "post">
+		<form action="{{ url_for('editItem', category_name = category.category_name, item_name = item.item_name, item_id = item.item_id) }}" method = "post">
 
 			<div class="form-group">
 				<label for="item_name">Name:</label>
@@ -40,7 +40,7 @@
 				</select>
 			</div>
 			
-			<a href="{{ url_for('showItem', category_name = category.category_name , item_name = item.item_name) }}" class='btn btn-outline-secondary' role='button'>
+			<a href="{{ url_for('showItem', category_name = category.category_name , item_name = item.item_name, item_id = item.item_id) }}" class='btn btn-outline-secondary' role='button'>
 				Cancel
 			</a>
 

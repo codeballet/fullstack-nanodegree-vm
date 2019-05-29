@@ -284,13 +284,18 @@ def addCategory():
         return render_template('addCategory.html')
 
 
-@app.route('/catalog/<category_name>/edit')
-def editCategory(category_name):
+@app.route('/catalog/<category_name>/<int:category_id>/edit')
+def editCategory(category_name, category_id):
     if 'user_name' not in login_session:
         flash('You need to log in to edit a category')
         return redirect(url_for('catalog'))
-    category = session.query(Category).filter_by(category_name = category_name).one()
-    if request.form['category_name'] and request.method == 'POST':
+    category = session.query(Category).filter_by(category_id = category_id).one()
+    # Check for logged in user and creator of categories
+    creator = False
+    if login_session.get('user_id') == category.user_id:
+        creator = True
+
+    if creator and request.form['category_name'] and request.method == 'POST':
         category.category_name = request.form['category_name']
         session.add(category)
         session.commit()
@@ -300,13 +305,18 @@ def editCategory(category_name):
         return render_template('editCategory.html', category = category)
 
 
-@app.route('/catalog/<category_name>/delete', methods = ['GET', 'POST'])
+@app.route('/catalog/<category_name>/<int:category_id>/delete', methods = ['GET', 'POST'])
 def deleteCategory(category_name):
     if 'user_name' not in login_session:
         flash('You need to log in to delete a category')
         return redirect(url_for('catalog'))
-    category = session.query(Category).filter_by(category_name = category_name).one()
-    if request.method == 'POST':
+    category = session.query(Category).filter_by(category_id = category_id).one()
+    # Check for logged in user and creator of categories
+    creator = False
+    if login_session.get('user_id') == category.user_id:
+        creator = True
+
+    if creator and request.method == 'POST':
         session.delete(category)
         session.commit()
         flash('Category and all its items deleted!')
@@ -315,11 +325,11 @@ def deleteCategory(category_name):
         return render_template('deleteCategory.html', category = category)
 
 
-@app.route('/catalog/<category_name>')
-def showCategory(category_name):
-    category = session.query(Category).filter_by(category_name = category_name).one()
+@app.route('/catalog/<category_name>/<int:category_id>')
+def showCategory(category_name, category_id):
+    category = session.query(Category).filter_by(category_id = category_id).one()
     categories = session.query(Category).order_by(Category.category_name).all()
-    items = session.query(Item).filter_by(category_id = category.category_id).all()
+    items = session.query(Item).filter_by(category_id = category_id).all()
     user = session.query(User).filter_by(user_id = category.user_id).one()
 
     # Check for logged in user and creator of categories
@@ -357,25 +367,35 @@ def addItem():
         return render_template('addItem.html', categories = categories)
 
 
-@app.route('/catalog/<category_name>/<item_name>')
-def showItem(category_name, item_name):
-    item = session.query(Item).filter_by(item_name = item_name).one()
+@app.route('/catalog/<category_name>/<item_name>/<int:item_id>')
+def showItem(category_name, item_name, item_id):
+    item = session.query(Item).filter_by(item_id = item_id).one()
     category = session.query(Category).filter_by(category_id = item.category_id).one()
-    if 'user_name' not in login_session:
-        return render_template('showPublicItem.html', item = item, category = category)
-    else:
-        return render_template('showItem.html', item = item, category = category)
+    # Check for logged in user and creator of categories
+    loggedIn = False
+    creator = False
+    if 'user_name' in login_session:
+        loggedIn = True
+    if login_session.get('user_id') == category.user_id:
+        creator = True
+
+    return render_template('showItem.html', loggedIn = loggedIn, creator = creator, item = item, category = category)
 
 
-@app.route('/catalog/<category_name>/<item_name>/edit', methods = ['GET', 'POST'])
-def editItem(category_name, item_name):
+@app.route('/catalog/<category_name>/<item_name>/<int:item_id>/edit', methods = ['GET', 'POST'])
+def editItem(category_name, item_name, item_id):
     if 'user_name' not in login_session:
         flash('You need to log in to edit an item')
         return redirect(url_for('catalog'))
-    item = session.query(Item).filter_by(item_name = item_name).one()
+    item = session.query(Item).filter_by(item_id = item_id).one()
     category = session.query(Category).filter_by(category_id = item.category_id).one()
     categories = session.query(Category).order_by(Category.category_name).all()
-    if request.method == 'POST':
+    # Check for logged in user and creator of categories
+    creator = False
+    if login_session.get('user_id') == category.user_id:
+        creator = True
+
+    if creator and request.method == 'POST':
         if request.form['item_name']:
             item.item_name = request.form['item_name']
         if request.form['item_description']:
@@ -394,14 +414,19 @@ def editItem(category_name, item_name):
         return render_template('editItem.html', item = item, category = category, categories = categories)
 
 
-@app.route('/catalog/<category_name>/<item_name>/delete', methods = ['GET', 'POST'])
-def deleteItem(category_name, item_name):
+@app.route('/catalog/<category_name>/<item_name>/<int:item_id>/delete', methods = ['GET', 'POST'])
+def deleteItem(category_name, item_name, item_id):
     if 'user_name' not in login_session:
         flash('You need to log in to delete an item')
         return redirect(url_for('catalog'))
-    category = session.query(Category).filter_by(category_name = category_name).one()
-    item = session.query(Item).filter_by(item_name = item_name).one()
-    if request.method == 'POST':
+    item = session.query(Item).filter_by(item_id = item_id).one()
+    category = session.query(Category).filter_by(category_id = item.category_id).one()
+    # Check for logged in user and creator of categories
+    creator = False
+    if login_session.get('user_id') == category.user_id:
+        creator = True
+
+    if creator and request.method == 'POST':
         session.delete(item)
         session.commit()
         flash('Item deleted')
