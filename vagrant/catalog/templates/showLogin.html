@@ -25,10 +25,14 @@
 
 {% block content %}
 {% include "header.html" %}
+<!-- Hide login link in header -->
+<script>
+    $('#navLoginLink').attr('style', 'display: none');
+</script>
 
 <div class="row">
     <div class="col-md-11 offset-md-1">
-        <h1>Login with OAuth 2.0</h1>
+        <h1 id="oauthHeading">Login with OAuth 2.0</h1>
         <div id="result"></div>
         <div class="g-signin2" id="googleSigninButton"></div>
         <!--button  class="btn g-signin2" id="googleSigninButton"></button-->
@@ -48,8 +52,9 @@
         console.log('inside callback function');
         console.log(authResult);
         if (authResult['code']) {
-            // Hide the sign-in button now that the user is authorized
+            // Hide the sign-in button and heading now that the user is authorized
             $('#googleSigninButton').attr('style', 'display: none');
+            $('#oauthHeading').attr('style', 'display: none');
             // Send the code to the server
             $.ajax({
                 type: 'POST',
@@ -63,10 +68,10 @@
                 success: function(result) {
                     // Handle or verify the server response if necessary.
                     if (result) {
-                        $('#result').html('Login Successful!</br> Token:</br>'+ result + '</br>Redirecting...')
-                        setTimeout(function() {
-                            window.location.href = '/catalog';
-                        }, 4000);
+                        $('#result').html('Login Successful!</br>'+ result + '</br>')
+                        // setTimeout(function() {
+                        //     window.location.href = '/catalog';
+                        // }, 4000);
                     } else if (authResult['error']) {
                         console.log('There was an error: ' + authResult['error']);
                     } else {

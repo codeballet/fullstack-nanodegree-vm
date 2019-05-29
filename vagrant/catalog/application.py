@@ -137,7 +137,20 @@ def login(provider):
         # Generate token and send back to client
         user = getUserInfo(user_id)
         token = user.generate_auth_token(600)
-        return jsonify({"token": token.decode('ascii')})
+        output = ''
+        output += '<h1>Welcome, '
+        output += login_session['user_name']
+        output += '!</h1>'
+        output += '<img src="'
+        output += login_session['user_picture']
+        output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
+        output += '<h2>Temporary API Token:</h2>'
+        output += '<p>'
+        output += token
+        output += '</p>'
+        flash("you are now logged in as %s" % login_session['user_name'])
+        print "Done logging in!"
+        return output
 
     else:
         return 'Unrecognized OAuth provider'
@@ -236,6 +249,9 @@ def catalog():
 
 @app.route('/catalog/newcategory', methods = ['GET', 'POST'])
 def addCategory():
+    if 'user_name' not in login_session:
+        flash('You need to log in to add a new category')
+        return redirect({{ url_for('catalog') }})
     if request.method == 'POST':
         if request.form['category_name']:
             newCategory = Category(category_name = request.form['category_name'])
@@ -250,6 +266,9 @@ def addCategory():
         return render_template('addCategory.html')
 
 
+
+
+
 @app.route('/catalog/<category_name>')
 def showCategory(category_name):
     category = session.query(Category).filter_by(category_name = category_name).one()
@@ -260,6 +279,9 @@ def showCategory(category_name):
 
 @app.route('/catalog/<category_name>/delete', methods = ['GET', 'POST'])
 def deleteCategory(category_name):
+    if 'user_name' not in login_session:
+        flash('You need to log in to delete a category')
+        return redirect({{ url_for('catalog') }})
     category = session.query(Category).filter_by(category_name = category_name).one()
     if request.method == 'POST':
         session.delete(category)
@@ -272,6 +294,9 @@ def deleteCategory(category_name):
 
 @app.route('/catalog/newitem', methods = ['GET', 'POST'])
 def addItem():
+    if 'user_name' not in login_session:
+        flash('You need to log in to add a new item')
+        return redirect(url_for('catalog'))
     categories = session.query(Category).order_by(asc(Category.category_name))
     if request.method == 'POST':
         if request.form['item_name']:
@@ -300,6 +325,9 @@ def showItem(category_name, item_name):
 
 @app.route('/catalog/<category_name>/<item_name>/edit', methods = ['GET', 'POST'])
 def editItem(category_name, item_name):
+    if 'user_name' not in login_session:
+        flash('You need to log in to edit an item')
+        return redirect({{ url_for('catalog') }})
     item = session.query(Item).filter_by(item_name = item_name).one()
     category = session.query(Category).filter_by(category_id = item.category_id).one()
     categories = session.query(Category).order_by(Category.category_name).all()
@@ -324,6 +352,9 @@ def editItem(category_name, item_name):
 
 @app.route('/catalog/<category_name>/<item_name>/delete', methods = ['GET', 'POST'])
 def deleteItem(category_name, item_name):
+    if 'user_name' not in login_session:
+        flash('You need to log in to delete an item')
+        return redirect({{ url_for('catalog') }})
     category = session.query(Category).filter_by(category_name = category_name).one()
     item = session.query(Item).filter_by(item_name = item_name).one()
     if request.method == 'POST':

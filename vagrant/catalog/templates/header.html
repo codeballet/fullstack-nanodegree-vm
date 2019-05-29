@@ -1,7 +1,7 @@
 <nav class="navbar navbar-light bg-light">
 	<a class="navbar-brand" href="{{ url_for('catalog') }}">Catalog</a>
 
-	<span class="navbar-text">
+	<span id="navLoginLink" class="navbar-text">
 		{% if 'user_name' not in session %}		
 		<a href="{{ url_for('showLogin') }}">Login</a>
 		{% else %}
