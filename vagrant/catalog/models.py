@@ -94,9 +94,7 @@ class Item(Base):
     item_price = Column(String(20))
     item_date = Column(DateTime, default=func.now())
     category_id = Column(Integer, ForeignKey('category.category_id'))
-    user_id = Column(Integer, ForeignKey('user.user_id'))
     category = relationship('Category', backref=backref('items', cascade='all, delete-orphan'))
-    user = relationship('User', backref=backref('items', cascade='all, delete-orphan'))
 
 
     @property
@@ -108,7 +106,6 @@ class Item(Base):
            'item_id': self.item_id,
            'item_price': self.item_price,
            'item_date': self.item_date,
-           'user_id': self.user_id,
            'category_id': self.category_id
        }
 

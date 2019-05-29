@@ -343,22 +343,26 @@ def showCategory(category_name, category_id):
     return render_template('showCategory.html', loggedIn = loggedIn, creator = creator, category = category, categories = categories, items = items, user_name = user.user_name)
 
 
-@app.route('/catalog/item/new', methods = ['GET', 'POST'])
-def addItem():
+@app.route('/catalog/<category_name>/<int:category_id>/item/new', methods = ['GET', 'POST'])
+def addItem(category_name, category_id):
     if 'user_name' not in login_session:
         flash('You need to log in to add a new item')
         return redirect(url_for('catalog'))
     categories = session.query(Category).order_by(asc(Category.category_name))
-    if request.method == 'POST':
+    category = session.query(Category).filter_by(category_id = category_id)
+    # Check for creator of category
+    creator = False
+    if login_session.get('user_id') == category.user_id:
+        creator = True
+
+    if creator and request.method == 'POST':
         if request.form['item_name']:
             newItem = Item(item_name = request.form['item_name'],
                            item_description = request.form['item_description'],
                            item_price = request.form['item_price'],
-                           category_id = request.form['category_id'],
-                           user_id = login_session['user_id'])
+                           category_id = category_id)
             session.add(newItem)
             session.commit()
-            category = session.query(Category).filter_by(category_id = newItem.category_id).one()
             flash('New Item added!')
             return redirect(url_for('showItem', category_name = category.category_name, item_name = newItem.item_name, item_id = newItem.item_id))
         else:
@@ -392,7 +396,7 @@ def editItem(category_name, item_name, item_id):
     item = session.query(Item).filter_by(item_id = item_id).one()
     category = session.query(Category).filter_by(category_id = item.category_id).one()
     categories = session.query(Category).order_by(Category.category_name).all()
-    # Check for logged in user and creator of categories
+    # Check for creator of category
     creator = False
     if login_session.get('user_id') == category.user_id:
         creator = True
@@ -423,7 +427,7 @@ def deleteItem(category_name, item_name, item_id):
         return redirect(url_for('catalog'))
     item = session.query(Item).filter_by(item_id = item_id).one()
     category = session.query(Category).filter_by(category_id = item.category_id).one()
-    # Check for logged in user and creator of categories
+    # Check for creator of category
     creator = False
     if login_session.get('user_id') == category.user_id:
         creator = True
