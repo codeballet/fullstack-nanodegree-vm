@@ -320,10 +320,16 @@ def showCategory(category_name):
     category = session.query(Category).filter_by(category_name = category_name).one()
     categories = session.query(Category).order_by(Category.category_name).all()
     items = session.query(Item).filter_by(category_id = category.category_id)
-    if 'user_name' not in login_session:
-        return render_template('showPublicCategory.html', category = category, categories = categories, items = items)
-    else:
-        return render_template('showCategory.html', category = category, categories = categories, items = items)
+
+    # Check for logged in user and creator of categories
+    loggedIn = False
+    creator = False
+    if 'user_name' in login_session:
+        loggedIn = True
+    if login_session.get('user_id') == category.user_id:
+        creator = True
+
+    return render_template('showCategory.html', loggedIn = loggedIn, creator = creator, category = category, categories = categories, items = items)
 
 
 @app.route('/catalog/item/new', methods = ['GET', 'POST'])
