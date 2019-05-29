@@ -244,7 +244,10 @@ def catalog():
     for item in items:
         get_category = session.query(Category).filter_by(category_id = item.category_id).one()
         list_categories.append(get_category.category_name)
-    return render_template('catalog.html', categories = categories, items = items, list_categories = list_categories)
+    if 'user_name' not in login_session:
+        return render_template('publicCatalog.html', categories = categories, items = items, list_categories = list_categories)
+    else:
+        return render_template('catalog.html', categories = categories, items = items, list_categories = list_categories)
 
 
 @app.route('/catalog/category/new', methods = ['GET', 'POST'])
@@ -302,7 +305,10 @@ def showCategory(category_name):
     category = session.query(Category).filter_by(category_name = category_name).one()
     categories = session.query(Category).order_by(Category.category_name).all()
     items = session.query(Item).filter_by(category_id = category.category_id)
-    return render_template('showCategory.html', category = category, categories = categories, items = items)
+    if 'user_name' not in login_session:
+        return render_template('showPublicCategory.html', category = category, categories = categories, items = items)
+    else:
+        return render_template('showCategory.html', category = category, categories = categories, items = items)
 
 
 @app.route('/catalog/item/new', methods = ['GET', 'POST'])
@@ -333,7 +339,10 @@ def addItem():
 def showItem(category_name, item_name):
     item = session.query(Item).filter_by(item_name = item_name).one()
     category = session.query(Category).filter_by(category_id = item.category_id).one()
-    return render_template('showItem.html', item = item, category = category)
+    if 'user_name' not in login_session:
+        return render_template('showPublicItem.html', item = item, category = category)
+    else:
+        return render_template('showItem.html', item = item, category = category)
 
 
 @app.route('/catalog/<category_name>/<item_name>/edit', methods = ['GET', 'POST'])
