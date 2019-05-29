@@ -240,13 +240,18 @@ def showLogin():
 def catalog():
     categories = session.query(Category).order_by(Category.category_name).all()
     items = session.query(Item).order_by(desc(Item.item_date)).limit(10)
-    users = session.query(User).all()
     list_categories = []
+    list_users = []
 
     # Generate a list of category names for items in chronological order
     for item in items:
         get_category = session.query(Category).filter_by(category_id = item.category_id).one()
         list_categories.append(get_category.category_name)
+
+    # Generate a list of users names for each category in alphabetical order
+    for category in categories:
+        get_user = session.query(User).filter_by(user_id = category.user_id).one()
+        list_users.append(get_user.user_name)
 
     # Check for logged in user and creator of categories
     loggedIn = False
@@ -257,7 +262,7 @@ def catalog():
         if login_session.get('user_id') == category.user_id:
             creator = True
 
-    return render_template('catalog.html', loggedIn = loggedIn, creator = creator, users = users, categories = categories, items = items, list_categories = list_categories)
+    return render_template('catalog.html', loggedIn = loggedIn, creator = creator, categories = categories, items = items, list_categories = list_categories, list_users = list_users)
 
 
 @app.route('/catalog/category/new', methods = ['GET', 'POST'])
