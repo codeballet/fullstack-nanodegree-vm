@@ -319,7 +319,8 @@ def deleteCategory(category_name):
 def showCategory(category_name):
     category = session.query(Category).filter_by(category_name = category_name).one()
     categories = session.query(Category).order_by(Category.category_name).all()
-    items = session.query(Item).filter_by(category_id = category.category_id)
+    items = session.query(Item).filter_by(category_id = category.category_id).all()
+    user = session.query(User).filter_by(user_id = category.user_id).one()
 
     # Check for logged in user and creator of categories
     loggedIn = False
@@ -329,7 +330,7 @@ def showCategory(category_name):
     if login_session.get('user_id') == category.user_id:
         creator = True
 
-    return render_template('showCategory.html', loggedIn = loggedIn, creator = creator, category = category, categories = categories, items = items)
+    return render_template('showCategory.html', loggedIn = loggedIn, creator = creator, category = category, categories = categories, items = items, user_name = user.user_name)
 
 
 @app.route('/catalog/item/new', methods = ['GET', 'POST'])
