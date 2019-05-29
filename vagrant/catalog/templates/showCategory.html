@@ -42,6 +42,12 @@
             </button>
         </a>
 
+        <a href="{{ url_for('editCategory', category_name = category.category_name) }}">
+            <button class="btn btn-outline-secondary">
+                Edit Category
+            </button>
+        </a>
+
         <a href="{{ url_for('deleteCategory', category_name = category.category_name) }}">
             <button class="btn btn-outline-danger">
                 Delete Category

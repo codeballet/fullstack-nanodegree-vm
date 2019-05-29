@@ -247,11 +247,11 @@ def catalog():
     return render_template('catalog.html', categories = categories, items = items, list_categories = list_categories)
 
 
-@app.route('/catalog/newcategory', methods = ['GET', 'POST'])
+@app.route('/catalog/category/new', methods = ['GET', 'POST'])
 def addCategory():
     if 'user_name' not in login_session:
         flash('You need to log in to add a new category')
-        return redirect({{ url_for('catalog') }})
+        return redirect(url_for('catalog'))
     if request.method == 'POST':
         if request.form['category_name']:
             newCategory = Category(category_name = request.form['category_name'])
@@ -266,22 +266,27 @@ def addCategory():
         return render_template('addCategory.html')
 
 
-
-
-
-@app.route('/catalog/<category_name>')
-def showCategory(category_name):
+@app.route('/catalog/<category_name>/edit')
+def editCategory(category_name):
+    if 'user_name' not in login_session:
+        flash('You need to log in to edit a category')
+        return redirect(url_for('catalog'))
     category = session.query(Category).filter_by(category_name = category_name).one()
-    categories = session.query(Category).order_by(Category.category_name).all()
-    items = session.query(Item).filter_by(category_id = category.category_id)
-    return render_template('showCategory.html', category = category, categories = categories, items = items)
+    if request.form['category_name'] and request.method == 'POST':
+        category.category_name = request.form['category_name']
+        session.add(category)
+        session.commit()
+        flash('Category edited')
+        return redirect(url_for('showCategory', category_name = category.category_name))
+    else:
+        return render_template('editCategory.html', category = category)
 
 
 @app.route('/catalog/<category_name>/delete', methods = ['GET', 'POST'])
 def deleteCategory(category_name):
     if 'user_name' not in login_session:
         flash('You need to log in to delete a category')
-        return redirect({{ url_for('catalog') }})
+        return redirect(url_for('catalog'))
     category = session.query(Category).filter_by(category_name = category_name).one()
     if request.method == 'POST':
         session.delete(category)
@@ -292,7 +297,15 @@ def deleteCategory(category_name):
         return render_template('deleteCategory.html', category = category)
 
 
-@app.route('/catalog/newitem', methods = ['GET', 'POST'])
+@app.route('/catalog/<category_name>')
+def showCategory(category_name):
+    category = session.query(Category).filter_by(category_name = category_name).one()
+    categories = session.query(Category).order_by(Category.category_name).all()
+    items = session.query(Item).filter_by(category_id = category.category_id)
+    return render_template('showCategory.html', category = category, categories = categories, items = items)
+
+
+@app.route('/catalog/item/new', methods = ['GET', 'POST'])
 def addItem():
     if 'user_name' not in login_session:
         flash('You need to log in to add a new item')
@@ -327,7 +340,7 @@ def showItem(category_name, item_name):
 def editItem(category_name, item_name):
     if 'user_name' not in login_session:
         flash('You need to log in to edit an item')
-        return redirect({{ url_for('catalog') }})
+        return redirect(url_for('catalog'))
     item = session.query(Item).filter_by(item_name = item_name).one()
     category = session.query(Category).filter_by(category_id = item.category_id).one()
     categories = session.query(Category).order_by(Category.category_name).all()
@@ -354,7 +367,7 @@ def editItem(category_name, item_name):
 def deleteItem(category_name, item_name):
     if 'user_name' not in login_session:
         flash('You need to log in to delete an item')
-        return redirect({{ url_for('catalog') }})
+        return redirect(url_for('catalog'))
     category = session.query(Category).filter_by(category_name = category_name).one()
     item = session.query(Item).filter_by(item_name = item_name).one()
     if request.method == 'POST':
