@@ -276,7 +276,7 @@ def addCategory():
             session.add(newCategory)
             session.commit()
             flash('New Category created!')
-            return redirect(url_for('showCategory', category_name = newCategory.category_name))
+            return redirect(url_for('showCategory', category_name = newCategory.category_name, category_id = newCategory.category_id))
         else:
             flash('You did not create a new Category')
             return redirect(url_for('catalog'))
@@ -306,7 +306,7 @@ def editCategory(category_name, category_id):
 
 
 @app.route('/catalog/<category_name>/<int:category_id>/delete', methods = ['GET', 'POST'])
-def deleteCategory(category_name):
+def deleteCategory(category_name, category_id):
     if 'user_name' not in login_session:
         flash('You need to log in to delete a category')
         return redirect(url_for('catalog'))
@@ -354,12 +354,13 @@ def addItem():
             newItem = Item(item_name = request.form['item_name'],
                            item_description = request.form['item_description'],
                            item_price = request.form['item_price'],
-                           category_id = request.form['category_id'])
+                           category_id = request.form['category_id'],
+                           user_id = login_session['user_id'])
             session.add(newItem)
             session.commit()
             category = session.query(Category).filter_by(category_id = newItem.category_id).one()
             flash('New Item added!')
-            return redirect(url_for('showItem', category_name = category.category_name, item_name = newItem.item_name))
+            return redirect(url_for('showItem', category_name = category.category_name, item_name = newItem.item_name, item_id = newItem.item_id))
         else:
             flash('You did not add a new Item')
             return redirect(url_for('catalog'))
@@ -371,6 +372,7 @@ def addItem():
 def showItem(category_name, item_name, item_id):
     item = session.query(Item).filter_by(item_id = item_id).one()
     category = session.query(Category).filter_by(category_id = item.category_id).one()
+    user = session.query(User).filter_by(user_id = item.user_id).one()
     # Check for logged in user and creator of categories
     loggedIn = False
     creator = False
@@ -379,7 +381,7 @@ def showItem(category_name, item_name, item_id):
     if login_session.get('user_id') == category.user_id:
         creator = True
 
-    return render_template('showItem.html', loggedIn = loggedIn, creator = creator, item = item, category = category)
+    return render_template('showItem.html', loggedIn = loggedIn, creator = creator, item = item, category = category, user = user)
 
 
 @app.route('/catalog/<category_name>/<item_name>/<int:item_id>/edit', methods = ['GET', 'POST'])
