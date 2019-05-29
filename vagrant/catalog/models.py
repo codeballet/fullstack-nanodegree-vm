@@ -69,7 +69,8 @@ class Category(Base):
    
     category_id = Column(Integer, primary_key=True)
     category_name = Column(String(80), nullable=False)
-    # user = relationship('User', backref=backref('categories', cascade='all, delete-orphan'))
+    user_id = Column(Integer, ForeignKey('user.user_id'), nullable=False)
+    user = relationship('User', backref=backref('categories', cascade='all, delete-orphan'))
 
     @property
     def serialize(self):
@@ -95,7 +96,7 @@ class Item(Base):
     category_id = Column(Integer, ForeignKey('category.category_id'))
     user_id = Column(Integer, ForeignKey('user.user_id'))
     category = relationship('Category', backref=backref('items', cascade='all, delete-orphan'))
-    # user = relationship('User', backref=backref('items', cascade='all, delete-orphan'))
+    user = relationship('User', backref=backref('items', cascade='all, delete-orphan'))
 
 
     @property

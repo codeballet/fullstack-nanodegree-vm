@@ -240,14 +240,24 @@ def showLogin():
 def catalog():
     categories = session.query(Category).order_by(Category.category_name).all()
     items = session.query(Item).order_by(desc(Item.item_date)).limit(10)
+    users = session.query(User).all()
     list_categories = []
+
+    # Generate a list of category names for items in chronological order
     for item in items:
         get_category = session.query(Category).filter_by(category_id = item.category_id).one()
         list_categories.append(get_category.category_name)
-    if 'user_name' not in login_session:
-        return render_template('publicCatalog.html', categories = categories, items = items, list_categories = list_categories)
-    else:
-        return render_template('catalog.html', categories = categories, items = items, list_categories = list_categories)
+
+    # Check for logged in user and creator of categories
+    loggedIn = False
+    creator = False
+    if 'user_name' in login_session:
+        loggedIn = True
+    for category in categories:
+        if login_session.get('user_id') == category.user_id:
+            creator = True
+
+    return render_template('catalog.html', loggedIn = loggedIn, creator = creator, users = users, categories = categories, items = items, list_categories = list_categories)
 
 
 @app.route('/catalog/category/new', methods = ['GET', 'POST'])
@@ -257,7 +267,7 @@ def addCategory():
         return redirect(url_for('catalog'))
     if request.method == 'POST':
         if request.form['category_name']:
-            newCategory = Category(category_name = request.form['category_name'])
+            newCategory = Category(category_name = request.form['category_name'], user_id = login_session['user_id'])
             session.add(newCategory)
             session.commit()
             flash('New Category created!')
