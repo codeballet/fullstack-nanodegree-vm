@@ -187,8 +187,6 @@ def gdisconnect():
     h = httplib2.Http()
     result = h.request(url, 'GET')[0]
 
-    print('result is: ')
-    print(result)
     if result['status'] == '200':
         response = make_response(json.dumps('Successfully disconnected'), 200)
         response.headers['Content-type'] = 'application/json'
@@ -459,17 +457,17 @@ def new_user():
     user_name = request.json.get('name')
     user_email = request.json.get('email')
     password = request.json.get('password')
-    if user_name is None or password is None:
-        return jsonify({"error":"Missing name and password arguments"})
+    if user_name is None or password is None or user_email is None:
+        return jsonify({"error":"Missing name, email, or password arguments"})
         
-    if session.query(User).filter_by(user_name = user_name).first() is not None:
-        return jsonify({"message":"user already exists"})
+    if session.query(User).filter_by(user_email = user_email).first() is not None:
+        return jsonify({"message":"user email already exists"})
 
     user = User(user_name = user_name, user_email = user_email)
     user.hash_password(password)
     session.add(user)
     session.commit()
-    return jsonify({ "username": user.user_name })
+    return jsonify({ "username": user.user_name, "email": user.user_email })
 
 
 # Generate token for already logged in user
@@ -503,7 +501,7 @@ def category_handler():
         elif category_id and category_name and request.method == 'PUT':
             return editCategoryAPI(category_id, category_name)
 
-        elif request.method == 'DELETE':
+        elif category_id and request.method == 'DELETE':
             return deleteCategoryAPI(category_id)
 
         else:
@@ -593,22 +591,34 @@ def getCategoryAPI(category_id):
 def addCategoryAPI(category_name):
     try:
         category = session.query(Category).filter_by(category_name = category_name).one()
-        return jsonify({"message":"Category %s already exists" % category_name})
+        if category.user_id == g.user.user_id:
+            return jsonify({"message":"Your already have category %s" % category_name})
+        else:
+            newCategory = Category(category_name = category_name, user_id = g.user.user_id)
+            session.add(newCategory)
+            session.commit()
+            return jsonify(category = newCategory.serialize)
             
     except NoResultFound:
-        newCategory = Category(category_name = category_name)
+        newCategory = Category(category_name = category_name, user_id = g.user.user_id)
         session.add(newCategory)
         session.commit()
         return jsonify(category = newCategory.serialize)
+
+    except:
+        return jsonify({"error":"Cannot retrive data about category"})
 
 
 def editCategoryAPI(category_id, category_name):
     try:
         category = session.query(Category).filter_by(category_id = category_id).one()
-        category.category_name = category_name
-        session.add(category)
-        session.commit()
-        return jsonify(category = category.serialize)
+        if category.user_id == g.user.user_id:
+            category.category_name = category_name
+            session.add(category)
+            session.commit()
+            return jsonify(category = category.serialize)
+        else:
+            return jsonify({"message":"You can only edit your own categories"})
     except:
         return jsonify({"error":"Cannot edit category ID %s" % category_id})
 
@@ -616,9 +626,12 @@ def editCategoryAPI(category_id, category_name):
 def deleteCategoryAPI(category_id):
     try:
         category = session.query(Category).filter_by(category_id = category_id).one()
-        session.delete(category)
-        session.commit()
-        return jsonify({"message":"Category ID %s deleted" % category_id})
+        if category.user_id == g.user.user_id:
+            session.delete(category)
+            session.commit()
+            return jsonify({"message":"Category ID %s deleted" % category_id})
+        else:
+            return jsonify({"message":"you can only delete your own categories"})
 
     except:
         return jsonify({"error":"cannot delete category ID %s" % category_id})
@@ -645,10 +658,13 @@ def getItemAPI(item_id):
 def addItemAPI(category_id, item_name, item_price, item_description):
     try:
         category = session.query(Category).filter_by(category_id = category_id).one()
-        newItem = Item(category_id = category_id, item_name = item_name, item_price = item_price, item_description = item_description)
-        session.add(newItem)
-        session.commit()
-        return jsonify(item = newItem.serialize)
+        if category.user_id == g.user.user_id:
+            newItem = Item(category_id = category_id, item_name = item_name, item_price = item_price, item_description = item_description)
+            session.add(newItem)
+            session.commit()
+            return jsonify(item = newItem.serialize)
+        else:
+            return jsonify({"message":"You can only add items to your own categories"})
     except:
         return jsonify({"error":"Category ID not valid: %s" % category_id})
 
@@ -656,18 +672,21 @@ def addItemAPI(category_id, item_name, item_price, item_description):
 def editItemAPI(category_id, item_id, item_name, item_price, item_description):
     try:
         item = session.query(Item).filter_by(item_id = item_id).one()
-        if item and category_id:
-            category = session.query(Category).filter_by(category_id = category_id).one()
-            item.category_id = category_id
-        if item and item_name:
-            item.item_name = item_name
-        if item and item_price:
-            item.item_price = item_price
-        if item and item_description:
-            item.item_description = item_description
-        session.add(item)
-        session.commit()
-        return jsonify(item = item.serialize)
+        if item.category.user_id == g.user.user_id:
+            if item and category_id:
+                category = session.query(Category).filter_by(category_id = category_id).one()
+                item.category_id = category_id
+            if item and item_name:
+                item.item_name = item_name
+            if item and item_price:
+                item.item_price = item_price
+            if item and item_description:
+                item.item_description = item_description
+            session.add(item)
+            session.commit()
+            return jsonify(item = item.serialize)
+        else:
+            return jsonify({"message":"You can only edit your own items"})
 
     except:
         return jsonify({"error":"Not valid category or item ID"})
@@ -676,10 +695,12 @@ def editItemAPI(category_id, item_id, item_name, item_price, item_description):
 def deleteItemAPI(item_id):
     try:
         item = session.query(Item).filter_by(item_id = item_id).one()
-        session.delete(item)
-        session.commit()
-        return jsonify({"message":"Deleted item with ID %s" % item_id})
-
+        if item.category.user_id == g.user.user_id:
+            session.delete(item)
+            session.commit()
+            return jsonify({"message":"Deleted item with ID %s" % item_id})
+        else:
+            return jsonify({"message":"You can only delete your own items"})
     except:
         return jsonify({"error":"Cannot find item ID %s" % item_id})
 
