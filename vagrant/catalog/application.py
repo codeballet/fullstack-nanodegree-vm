@@ -765,10 +765,15 @@ def editItemAPI(category_id, item_id, item_name,
     try:
         item = session.query(Item).filter_by(item_id=item_id).one()
         if item.category.user_id == g.user.user_id:
+            # If parameters are present, edit the item
             if item and category_id:
                 category = session.query(Category).filter_by(
                     category_id=category_id).one()
-                item.category_id = category_id
+                # Check if the chosen new category belongs to the logged in user
+                if category.user_id == g.user.user_id:
+                    item.category_id = category_id
+                else:
+                    return jsonify({"message": "You must choose one of your own categories for the item"})
             if item and item_name:
                 item.item_name = item_name
             if item and item_price:
