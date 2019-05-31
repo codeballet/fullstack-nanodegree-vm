@@ -7,10 +7,10 @@ from models import Category, User, Item, Base
 
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
-import httplib2
 from flask import make_response
 from flask import session as login_session
 from flask_httpauth import HTTPBasicAuth
+import httplib2
 import requests
 import json
 import random
@@ -353,8 +353,6 @@ def showCategory(category_name, category_id):
         Category.category_name).all()
     items = session.query(Item).filter_by(
         category_id=category.category_id).all()
-    user = session.query(User).filter_by(
-        user_id=category.user_id).one()
 
     # Check for logged in user and creator of categories
     loggedIn = False
@@ -369,8 +367,7 @@ def showCategory(category_name, category_id):
                            creator=creator,
                            category=category,
                            categories=categories,
-                           items=items,
-                           user_name=user.user_name)
+                           items=items)
 
 
 @app.route('/catalog/<category_name>/<int:category_id>/item/new',
@@ -444,7 +441,7 @@ def editItem(category_name, item_name, item_id):
     item = session.query(Item).filter_by(item_id=item_id).one()
     category = session.query(Category).filter_by(
         category_id=item.category_id).one()
-    categories = session.query(Category).order_by(
+    categories = session.query(Category).filter_by(user_id = category.user.user_id).order_by(
         Category.category_name).all()
     # Check for creator of category
     creator = False
@@ -769,11 +766,15 @@ def editItemAPI(category_id, item_id, item_name,
             if item and category_id:
                 category = session.query(Category).filter_by(
                     category_id=category_id).one()
-                # Check if the chosen new category belongs to the logged in user
+                # Check if the chosen new category
+                # belongs to the logged in user
                 if category.user_id == g.user.user_id:
                     item.category_id = category_id
                 else:
-                    return jsonify({"message": "You must choose one of your own categories for the item"})
+                    return jsonify({
+                        "message":
+                        "You must choose one of your own categories \
+                        for the item"})
             if item and item_name:
                 item.item_name = item_name
             if item and item_price:

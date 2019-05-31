@@ -43,9 +43,9 @@
         <ul>
         {% for item in items %}
             <a href = "{{ url_for('showItem', category_name = item.category.category_name, item_name = item.item_name, item_id = item.item_id) }}">
-                    <li>
-                            {{ item.item_name }} <i>({{ item.category.category_name }})</i>
-                    </li>
+                <li>
+                    {{ item.item_name }} (Category <i>{{ item.category.category_name }}</i>, by <i>{{ item.category.user.user_name }}</i>)
+                </li>
             </a>
         {% endfor %}
         </ul>
