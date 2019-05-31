@@ -20,7 +20,7 @@ import string
 auth = HTTPBasicAuth()
 
 app = Flask(__name__)
-engine = create_engine('sqlite:///antiques.db')
+engine = create_engine('sqlite:///catalog.db')
 Base.metadata.bind = engine
 Session = sessionmaker(bind=engine)
 session = Session()
