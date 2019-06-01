@@ -26,6 +26,7 @@ Session = sessionmaker(bind=engine)
 session = Session()
 
 
+# Load client_id from google oauth client
 with open('client_secrets.json', 'r') as f:
     CLIENT_ID = json.loads(f.read())['web']['client_id']
 
@@ -245,7 +246,9 @@ def showLogin():
                     for x in range(32))
     login_session['state'] = state
     print('state is: %s' % state)
-    return render_template('showLogin.html', STATE=state)
+    return render_template('showLogin.html',
+                           STATE=state,
+                           CLIENT_ID = CLIENT_ID)
 
 
 @app.route('/')
@@ -816,6 +819,7 @@ def getAllUsersAPI():
 
 
 if __name__ == '__main__':
+    # Provide secret key for Flask session
     app.secret_key = 'super_secret_key'
     app.debug = False
     app.run(host='0.0.0.0', port=8000, threaded=False)

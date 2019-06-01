@@ -6,13 +6,13 @@
 
 <script src="https://apis.google.com/js/platform.js?onload=start" async defer>
 </script>
-<meta name="google-signin-client_id" content="1081482156056-blcl32h53k7bb2jqugpn3u5kqnd0vvoq.apps.googleusercontent.com">
+<meta name="google-signin-client_id" content="{{ CLIENT_ID }}">
 
 <script>
     function start() {
         gapi.load('auth2', function() {
             auth2 = gapi.auth2.init({
-                client_id: '1081482156056-blcl32h53k7bb2jqugpn3u5kqnd0vvoq.apps.googleusercontent.com',
+                client_id: '{{ CLIENT_ID }}',
                 // Scopes to request in addition to 'profile' and 'email'
                 //scope: 'additional_scope'
             });
