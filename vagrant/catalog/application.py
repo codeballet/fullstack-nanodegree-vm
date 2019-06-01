@@ -26,9 +26,13 @@ Session = sessionmaker(bind=engine)
 session = Session()
 
 
-# Load client_id from google oauth client
+# Load client_id from google oauth client file
 with open('client_secrets.json', 'r') as f:
     CLIENT_ID = json.loads(f.read())['web']['client_id']
+
+# Load Flask session secret from file
+with open('session_secrets.json', 'r') as f:
+    SESSION_SECRET = json.loads(f.read())['secret']
 
 
 ####################################
@@ -820,6 +824,6 @@ def getAllUsersAPI():
 
 if __name__ == '__main__':
     # Provide secret key for Flask session
-    app.secret_key = 'super_secret_key'
+    app.secret_key = SESSION_SECRET
     app.debug = False
     app.run(host='0.0.0.0', port=8000, threaded=False)
