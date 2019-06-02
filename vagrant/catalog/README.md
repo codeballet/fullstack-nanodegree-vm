@@ -166,8 +166,8 @@ The request may look like this:
 curl -X PUT -H "Content-Type: application/json" -u YOUR_NAME:YOUR_PASSWORD -d '{"id":"ID","name":"NEW_ITEM_NAME"}' http://localhost:8000/api/catalog/item
 ```
 
-#### Deleting an item with 'DELETE'
-To delete an item, you send a 'DELETE' request containing the `id` of the item. The request may look like:
+#### Deleting an item with `DELETE`
+To delete an item, you send a `DELETE` request containing the `id` of the item. The request may look like:
 ```
 curl -X PUT -H "Content-Type: application/json" -u YOUR_NAME:YOUR_PASSWORD -d '{"id":"ID"}' http://localhost:8000/api/catalog/item
 ```
