@@ -34,6 +34,19 @@ To generate the `session_secrets.json` file:
 * Inside the file, there should be a JSON formatted string with a key that is named `secret`. The value can be any random value of digits and letters. For instance, `{"secret": "YOUR_RANDOM_SECRET_SESSION_KEY"}`.
 * Put the file in the root directory of the app.
 
+Below is an example of how you may create the `session_secrets.json` file in python:
+```
+import os
+import base64
+import json
+random_bytes=os.urandom(64)
+data=base64.b64encode(random_bytes).decode('utf-8')
+data_dic={}
+data_dic['secret']=data
+with open('session_secrets.json','w') as f:
+    json.dump(data_dic,f)
+```
+
 ### Starting the server and using the app
 Once all above installations and configurations are done, change directory to the root of the app and `python application.py`. The server should now be up and running, and the list of categores in the database available at the URL`http://localhost:8000/` and `http://localhost:8000/catalog`.
 
